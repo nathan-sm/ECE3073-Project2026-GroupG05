@@ -104,7 +104,7 @@ synthesis
 *greybox_tmp/
 *RemoteSystemsTempFiles
 *.ppf
-*.qip
+#*.qip
 
 # Software removals
 software/*_bsp/*
