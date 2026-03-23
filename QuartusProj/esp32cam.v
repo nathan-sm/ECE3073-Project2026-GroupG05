@@ -20,8 +20,8 @@ module esp32cam(
 	output wire [3:0] VGA_B;
 	output wire VGA_VS, VGA_HS;
 	
-//	input [1:0] KEY;
-//	input [9:0] SW;
+	input [1:0] KEY;
+	input [9:0] SW;
 	
 	// === Auxillary wires ===
 	
