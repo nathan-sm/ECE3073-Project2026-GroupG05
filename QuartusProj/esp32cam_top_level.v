@@ -39,7 +39,13 @@ module top_level (
     inout  [35:0]   GPIO,
     
     // ---- Accelerometer ---- //
-    input  [2:1]    GSENSOR_INT
+    input  [2:1]  GSENSOR_INT,
+	 
+	 // Acceleromoter SPI //
+	 input  	GSENSOR_SDO, 
+	 output 	GSENSOR_SDI, 
+	 output  GSENSOR_SCLK,
+	 output 	GSENSOR_CS_N 
 );
 
     // ||Internal Wires & Interconnects||
@@ -57,6 +63,13 @@ module top_level (
     // VGA Controller to RAM interconnects
     wire [16:0] vga_read_address;
     wire [3:0]  vga_read_data;
+	 
+	 // SPI Bus
+	 
+    wire        spi_pico;      // Controller Out, Peripheral In — shared to both devices
+    wire        spi_poci;      // Controller In, Peripheral Out — muxed from active device
+    wire        spi_sclk;      // Clock from Nios
+    wire [1:0]  spi_ss_n;      // One-hot CS: [0]=ESP-CAM, [1]=GSENSOR
 
     // ||PLL||
     
@@ -103,7 +116,13 @@ module top_level (
         .sdram_control_dq       (DRAM_DQ),               
         .sdram_control_dqm      ({DRAM_UDQM, DRAM_LDQM}),
         .sdram_control_ras_n    (DRAM_RAS_N),            
-        .sdram_control_we_n     (DRAM_WE_N)              
+        .sdram_control_we_n     (DRAM_WE_N),
+
+			// SPI
+			.spi_0_MISO					(spi_poci),
+			.spi_0_MOSI					(spi_pico),
+			.spi_0_SCLK					(spi_sclk),
+			.spi_0_SS_n					(spi_ss_n)
         
     );
 
@@ -149,5 +168,21 @@ module top_level (
     assign GPIO[6]     = 1'bz;
     assign GPIO[4:3]   = 2'bzz;
     assign GPIO[1:0]   = 2'bzz;
+	 
+	 // --- ESP-CAM SPI (GPIO pins, confirmed from background doc p.29) ---
+    assign GPIO[8]   = spi_pico;    // PICO <- Controller Out to ESP-CAM
+    assign GPIO[9]   = spi_sclk;    // SCLK <- clock from Nios
+    assign GPIO[5]   = spi_ss_n[0]; // CS_N <- active-low select for ESP-CAM
+
+    // --- Accelerometer SPI (GSENSOR dedicated pins) ---
+    assign GSENSOR_SCLK = spi_sclk;
+    assign GSENSOR_SDI = spi_pico;
+    assign GSENSOR_CS_N = spi_ss_n[1];
+
+    // --- POCI mux: route the active slave's data line to Nios ---
+    assign spi_poci = (~spi_ss_n[0]) ? GPIO[7]      // ESP-CAM POCI when its CS is low
+                    : (~spi_ss_n[1]) ? GSENSOR_SDO  // Accel POCI   when its CS is low
+                    : 1'b0;
+
 
 endmodule

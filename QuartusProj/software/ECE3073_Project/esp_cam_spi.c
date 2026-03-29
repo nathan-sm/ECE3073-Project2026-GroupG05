@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdint.h>
+#include "system.h"
+#include "io.h"
+#include "altera_avalon_spi.h"
+
+// SPI Slave Indices
+#define ESP_CAM_SS      0       // spi_ss_n[0]
+#define ACCEL_SS        1       // spi_ss_n[1]
+
+//Image Parameters
+#define IMAGE_WIDTH     320
+#define IMAGE_HEIGHT    240
+#define IMAGE_SIZE      (IMAGE_WIDTH * IMAGE_HEIGHT)    // 76,800 pixels
+
+// ESP-CAM Command Byte
+// Bit 0: 0 = Greyscale,   1 = 4-bit RGB
+// Bit 1: 0 = 320x240,     1 = 160x120
+// Bit 2: 0 = Raw stream,  1 = Packed stream
+// Bit 3: 0 = Flash off,   1 = Flash on
+// Bit 4: 0 = No change,   1 = Apply settings (must be set for bits 0-3 to register)
+#define CAM_CMD_DEFAULT 0x00    // Greyscale
+
+
+// Write a single 4-bit pixel to the pixel buffer via Nios PIOs
+void write_pixel(uint32_t addr, uint8_t pixel_4bit) {
+    IOWR(IMG_ADDY_BASE,  0, addr);
+    IOWR(PIXEL_DAT_BASE, 0, pixel_4bit & 0xF);
+}
+
+// Send command byte then receive a full 320x240 frame into the pixel buffer
+void receive_frame(uint8_t cmd) {
+    uint8_t rx_byte;
+    uint8_t tx_dummy = 0x00;
+
+    // Send command byte to configure/trigger the camera
+    alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
+                           1, &cmd,
+                           0, NULL,
+                           0);
+
+    // Receive IMAGE_SIZE bytes, one pixel per byte
+    for (uint32_t i = 0; i < IMAGE_SIZE; i++) {
+        alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
+                               1, &tx_dummy,    // dummy TX to drive clock
+                               1, &rx_byte,     // receive 1 byte
+                               0);
+        write_pixel(i, rx_byte >> 4);
+    }
+}
+
+int main(void) {
+    printf("ESP-CAM SPI initialised\n");
+
+    // Send startup command to put camera into known state
+    alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
+                           1, (uint8_t[]){CAM_CMD_DEFAULT},
+                           0, NULL,
+                           0);
+
+    while (1) {
+        // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
+        while (IORD(CAM_REDY_BASE, 0) == 0);
+
+        receive_frame(CAM_CMD_DEFAULT);
+
+        printf("Frame written to pixel buffer\n");
+    }
+
+    return 0;
+}
