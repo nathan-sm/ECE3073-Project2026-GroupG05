@@ -83,11 +83,11 @@ synthesis
 *simulation/
 
 # Ignore metadata:
-*.metadata/version.ini
-*.metadata/.lock
-*.metadata/.log
-*.metadata/.mylyn/
-*.metadata/**/.log
+**/.metadata/version.ini
+**/.metadata/.lock
+**/.metadata/.log
+**/.metadata/.mylyn/
+**/.metadata/**/.log
 # !*.metadata/.plugins/*  # Do not ignore the eclipse plugins, as they are needed to be able to load the project
 
 # Ignore BSP folder:
@@ -112,18 +112,18 @@ synthesis
 #*.qip
 
 # Software removals
-*software/*_bsp/*
-*software/*/obj/
-*software/*/.settings/
-*software/*/.force_relink
-*software/*/*.elf
-*software/*/*.map
-*software/*/*.objdump
-*software/*/readme.txt
+**/software/*_bsp/*
+**/software/*/obj/
+**/software/*/.settings/
+**/software/*/.force_relink
+**/software/*/*.elf
+**/software/*/*.map
+**/software/*/*.objdump
+**/software/*/readme.txt
 
-!*software/*/.project
-!*software/*/.cproject
-!*software/*/create-this-app
-!*software/*/create-this-bsp
-!*software/*/Makefile
-!*software/*/settings.bsp
+!**/software/*/.project
+!**/software/*/.cproject
+!**/software/*/create-this-app
+!**/software/*/create-this-bsp
+!**/software/*/Makefile
+!**/software/*/settings.bsp
