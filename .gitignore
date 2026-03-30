@@ -99,7 +99,7 @@ synthesis
 */synthesis/
 */*.bsf
 */*.xml
-*.sopcinfo
+# *.sopcinfo
 */*_bb.v
 */*_inst.v
 
@@ -113,14 +113,17 @@ synthesis
 
 # Software removals
 software/*_bsp/*
-software/*/.settings/
 software/*/obj/
-software/*/.cproject
+software/*/.settings/
 software/*/.force_relink
-software/*/.project
-software/*/create-this-app
-software/*/Makefile
 software/*/*.elf
 software/*/*.map
 software/*/*.objdump
 software/*/readme.txt
+
+!software/*/.project
+!software/*/.cproject
+!software/*/create-this-app
+!software/*/create-this-bsp
+!software/*/Makefile
+!software/*/settings.bsp
