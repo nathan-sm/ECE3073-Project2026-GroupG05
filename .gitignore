@@ -83,7 +83,12 @@ synthesis
 *simulation/
 
 # Ignore metadata:
-*.metadata/
+*.metadata/version.ini
+*.metadata/.lock
+*.metadata/.log
+*.metadata/.mylyn/
+*.metadata/**/.log
+# !*.metadata/.plugins/*  # Do not ignore the eclipse plugins, as they are needed to be able to load the project
 
 # Ignore BSP folder:
 *_bsp/*
