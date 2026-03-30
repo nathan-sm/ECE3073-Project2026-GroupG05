@@ -112,18 +112,18 @@ synthesis
 #*.qip
 
 # Software removals
-software/*_bsp/*
-software/*/obj/
-software/*/.settings/
-software/*/.force_relink
-software/*/*.elf
-software/*/*.map
-software/*/*.objdump
-software/*/readme.txt
+*software/*_bsp/*
+*software/*/obj/
+*software/*/.settings/
+*software/*/.force_relink
+*software/*/*.elf
+*software/*/*.map
+*software/*/*.objdump
+*software/*/readme.txt
 
-!software/*/.project
-!software/*/.cproject
-!software/*/create-this-app
-!software/*/create-this-bsp
-!software/*/Makefile
-!software/*/settings.bsp
+!*software/*/.project
+!*software/*/.cproject
+!*software/*/create-this-app
+!*software/*/create-this-bsp
+!*software/*/Makefile
+!*software/*/settings.bsp
