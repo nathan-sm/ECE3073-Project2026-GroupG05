@@ -1,4 +1,4 @@
-module top_level (
+module esp32cam_top_level (
     // ---- System Clocks ---- //
     input           CLOCK_50,
     
@@ -111,7 +111,7 @@ module top_level (
     
     // 2-Port RAM (Pixel Buffer)
     // Write side driven by Nios, Read side driven by VGA controller
-    pixel_buffer_ram buffer_inst (
+    pixel_buffer buffer_inst (
         .clock      (vga_clk_25MHz),       // Both read and write triggered by VGA clock
         .data       (pixel_data_write),    // From Nios
         .rdaddress  (vga_read_address),    // From VGA Controller
@@ -120,19 +120,19 @@ module top_level (
         .q          (vga_read_data)        // To VGA Controller
     );
 
-    // VGA Controller
+	 // VGA Controller
     vga_controller vga_inst (
-        .pixel_clk  (vga_clk_25MHz),
-        .reset_n    (KEY[0]),
-        .pixel_data (vga_read_data),       // Data read from the 2-Port RAM
-        .pixel_addr (vga_read_address),    // Address requested by VGA controller
-        .VGA_R      (VGA_R),
-        .VGA_G      (VGA_G),
-        .VGA_B      (VGA_B),
-        .VGA_HS     (VGA_HS),
-        .VGA_VS     (VGA_VS)
+        .VGA_CLK  (vga_clk_25MHz),     // 25MHz VGA clock
+        .VGA_DATA (vga_read_data),     // Data read from the 2-Port RAM
+        .VGA_ADDR (vga_read_address),  // Address requested by VGA controller
+        .VGA_R    (VGA_R),
+        .VGA_G    (VGA_G),
+        .VGA_B    (VGA_B),
+        .VGA_HS   (VGA_HS),
+        .VGA_VS   (VGA_VS)
     );
-
+	 
+	 
     // ||Physical Pin Assignments & Logic||
     
     // Map the 24-bit Nios PIO outputs to the physical 8-bit HEX displays
