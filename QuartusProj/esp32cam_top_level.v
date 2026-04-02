@@ -58,10 +58,11 @@ module top_level (
     wire [23:0] hex20_wire;
     wire [23:0] hex53_wire;
     wire [3:0]  pixel_data_write;
-    wire [16:0] pixel_addr_write; 
+    wire [16:0] pixel_addr_write;
+    wire [9:0]  ledr_wire;         // LEDR routed through wire for hardware test
     
     // VGA Controller to RAM interconnects
-    wire [16:0] vga_read_address;
+    wire [18:0] vga_read_address;
     wire [3:0]  vga_read_data;
 	 
 	 // SPI Bus
@@ -92,7 +93,7 @@ module top_level (
         .reset_reset_n          (KEY[0]),                
         
         // Basic IO
-        .ledr_export            (LEDR),                  
+        .ledr_export            (ledr_wire),
         .sw_export              (SW),                    
         .key_export             (KEY),                   
         
@@ -130,7 +131,7 @@ module top_level (
     
     // 2-Port RAM (Pixel Buffer)
     // Write side driven by Nios, Read side driven by VGA controller
-    pixel_buffer_ram buffer_inst (
+    pixel_buffer buffer_inst (
         .clock      (vga_clk_25MHz),       // Both read and write triggered by VGA clock
         .data       (pixel_data_write),    // From Nios
         .rdaddress  (vga_read_address),    // From VGA Controller
@@ -141,10 +142,9 @@ module top_level (
 
     // VGA Controller
     vga_controller vga_inst (
-        .pixel_clk  (vga_clk_25MHz),
-        .reset_n    (KEY[0]),
-        .pixel_data (vga_read_data),       // Data read from the 2-Port RAM
-        .pixel_addr (vga_read_address),    // Address requested by VGA controller
+        .VGA_CLK    (vga_clk_25MHz),
+        .VGA_DATA   (vga_read_data),       // Data read from the 2-Port RAM
+        .VGA_ADDR   (vga_read_address),    // Address requested by VGA controller
         .VGA_R      (VGA_R),
         .VGA_G      (VGA_G),
         .VGA_B      (VGA_B),
@@ -162,6 +162,9 @@ module top_level (
     assign HEX3 = hex53_wire[7:0];
     assign HEX4 = hex53_wire[15:8];
     assign HEX5 = hex53_wire[23:16];
+
+    // Hardware FPGA flash test: pressing KEY[1] lights LEDR[0] directly in hardware
+    assign LEDR = ledr_wire | {9'b0, ~KEY[1]};
 
     // Optional: High-impedance unused GPIO pins to prevent camera interference
     assign GPIO[11:10] = 2'bzz;

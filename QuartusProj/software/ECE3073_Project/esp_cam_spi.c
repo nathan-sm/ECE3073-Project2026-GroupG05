@@ -53,10 +53,10 @@ int main(void) {
     printf("ESP-CAM SPI initialised\n");
 
     // Send startup command to put camera into known state
+    uint8_t startup_cmd = CAM_CMD_DEFAULT;
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
-                           1, (uint8_t[]){CAM_CMD_DEFAULT},
-                           0, NULL,
-                           0);
+                           1, &startup_cmd,
+                           0, NULL, 0);
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
