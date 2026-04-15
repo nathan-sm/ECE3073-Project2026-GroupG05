@@ -21,7 +21,7 @@
    {
       datum baseAddress
       {
-         value = "67375120";
+         value = "67375152";
          type = "String";
       }
    }
@@ -45,7 +45,7 @@
    {
       datum baseAddress
       {
-         value = "67375168";
+         value = "67375200";
          type = "String";
       }
    }
@@ -61,7 +61,7 @@
    {
       datum baseAddress
       {
-         value = "67375152";
+         value = "67375184";
          type = "String";
       }
    }
@@ -77,7 +77,7 @@
    {
       datum baseAddress
       {
-         value = "67375104";
+         value = "67375136";
          type = "String";
       }
    }
@@ -93,7 +93,7 @@
    {
       datum baseAddress
       {
-         value = "67375232";
+         value = "67375264";
          type = "String";
       }
    }
@@ -109,7 +109,7 @@
    {
       datum baseAddress
       {
-         value = "67375184";
+         value = "67375216";
          type = "String";
       }
    }
@@ -125,7 +125,7 @@
    {
       datum baseAddress
       {
-         value = "67375216";
+         value = "67375248";
          type = "String";
       }
    }
@@ -157,7 +157,7 @@
    {
       datum baseAddress
       {
-         value = "67375136";
+         value = "67375168";
          type = "String";
       }
    }
@@ -198,6 +198,22 @@
          type = "String";
       }
    }
+   element spi_0
+   {
+      datum _sortIndex
+      {
+         value = "13";
+         type = "int";
+      }
+   }
+   element spi_0.spi_control_port
+   {
+      datum baseAddress
+      {
+         value = "67375104";
+         type = "String";
+      }
+   }
    element sw
    {
       datum _sortIndex
@@ -210,7 +226,7 @@
    {
       datum baseAddress
       {
-         value = "67375200";
+         value = "67375232";
          type = "String";
       }
    }
@@ -277,6 +293,7 @@
    internal="sdram_control.wire"
    type="conduit"
    dir="end" />
+ <interface name="spi_0" internal="spi_0.external" type="conduit" dir="end" />
  <interface name="sw" internal="sw.external_connection" type="conduit" dir="end" />
  <module name="cam_redy" kind="altera_avalon_pio" version="18.1" enabled="1">
   <parameter name="bitClearingEdgeCapReg" value="false" />
@@ -411,7 +428,7 @@
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='ram.s1' start='0x4020000' end='0x4039000' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2_0.debug_mem_slave' start='0x4040800' end='0x4041000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='img_addy.s1' start='0x4041000' end='0x4041010' type='altera_avalon_pio.s1' /><slave name='cam_redy.s1' start='0x4041010' end='0x4041020' type='altera_avalon_pio.s1' /><slave name='pixel_dat.s1' start='0x4041020' end='0x4041030' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4041030' end='0x4041040' type='altera_avalon_pio.s1' /><slave name='hex20.s1' start='0x4041040' end='0x4041050' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x4041050' end='0x4041060' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4041060' end='0x4041070' type='altera_avalon_pio.s1' /><slave name='ledr.s1' start='0x4041070' end='0x4041080' type='altera_avalon_pio.s1' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x4041080' end='0x4041088' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='ram.s1' start='0x4020000' end='0x4039000' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2_0.debug_mem_slave' start='0x4040800' end='0x4041000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='spi_0.spi_control_port' start='0x4041000' end='0x4041020' type='altera_avalon_spi.spi_control_port' /><slave name='img_addy.s1' start='0x4041020' end='0x4041030' type='altera_avalon_pio.s1' /><slave name='cam_redy.s1' start='0x4041030' end='0x4041040' type='altera_avalon_pio.s1' /><slave name='pixel_dat.s1' start='0x4041040' end='0x4041050' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4041050' end='0x4041060' type='altera_avalon_pio.s1' /><slave name='hex20.s1' start='0x4041060' end='0x4041070' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x4041070' end='0x4041080' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4041080' end='0x4041090' type='altera_avalon_pio.s1' /><slave name='ledr.s1' start='0x4041090' end='0x40410A0' type='altera_avalon_pio.s1' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x40410A0' end='0x40410A8' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -457,7 +474,7 @@
   <parameter name="instruction_master_high_performance_paddr_size" value="0" />
   <parameter name="instruction_master_paddr_base" value="0" />
   <parameter name="instruction_master_paddr_size" value="0" />
-  <parameter name="internalIrqMaskSystemInfo" value="7" />
+  <parameter name="internalIrqMaskSystemInfo" value="15" />
   <parameter name="io_regionbase" value="0" />
   <parameter name="io_regionsize" value="0" />
   <parameter name="master_addr_map" value="false" />
@@ -644,6 +661,22 @@
   <parameter name="registerDataIn" value="true" />
   <parameter name="rowWidth" value="13" />
  </module>
+ <module name="spi_0" kind="altera_avalon_spi" version="18.1" enabled="1">
+  <parameter name="avalonSpec" value="2.0" />
+  <parameter name="clockPhase" value="1" />
+  <parameter name="clockPolarity" value="1" />
+  <parameter name="dataWidth" value="8" />
+  <parameter name="disableAvalonFlowControl" value="false" />
+  <parameter name="inputClockRate" value="50000000" />
+  <parameter name="insertDelayBetweenSlaveSelectAndSClk" value="false" />
+  <parameter name="insertSync" value="false" />
+  <parameter name="lsbOrderedFirst" value="false" />
+  <parameter name="masterSPI" value="true" />
+  <parameter name="numberOfSlaves" value="2" />
+  <parameter name="syncRegDepth" value="2" />
+  <parameter name="targetClockRate" value="5000000" />
+  <parameter name="targetSlaveSelectToSClkDelay" value="0.0" />
+ </module>
  <module name="sw" kind="altera_avalon_pio" version="18.1" enabled="1">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
@@ -664,7 +697,7 @@
    start="nios2_gen2_0.data_master"
    end="jtag_uart_0.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041080" />
+  <parameter name="baseAddress" value="0x040410a0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -700,7 +733,7 @@
    start="nios2_gen2_0.data_master"
    end="ledr.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041070" />
+  <parameter name="baseAddress" value="0x04041090" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -709,7 +742,7 @@
    start="nios2_gen2_0.data_master"
    end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041060" />
+  <parameter name="baseAddress" value="0x04041080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -718,7 +751,7 @@
    start="nios2_gen2_0.data_master"
    end="key.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041050" />
+  <parameter name="baseAddress" value="0x04041070" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -727,7 +760,7 @@
    start="nios2_gen2_0.data_master"
    end="hex20.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041040" />
+  <parameter name="baseAddress" value="0x04041060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -736,7 +769,7 @@
    start="nios2_gen2_0.data_master"
    end="hex53.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041030" />
+  <parameter name="baseAddress" value="0x04041050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -745,7 +778,7 @@
    start="nios2_gen2_0.data_master"
    end="pixel_dat.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041020" />
+  <parameter name="baseAddress" value="0x04041040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -754,7 +787,7 @@
    start="nios2_gen2_0.data_master"
    end="cam_redy.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04041010" />
+  <parameter name="baseAddress" value="0x04041030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -762,6 +795,15 @@
    version="18.1"
    start="nios2_gen2_0.data_master"
    end="img_addy.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04041020" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="nios2_gen2_0.data_master"
+   end="spi_0.spi_control_port">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x04041000" />
   <parameter name="defaultConnection" value="false" />
@@ -804,6 +846,7 @@
  <connection kind="clock" version="18.1" start="clk_0.clk" end="jtag_uart_0.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="sw.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="hex53.clk" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="spi_0.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="ram.clk1" />
  <connection
    kind="interrupt"
@@ -821,6 +864,13 @@
    start="nios2_gen2_0.irq"
    end="key.irq">
   <parameter name="irqNumber" value="2" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="18.1"
+   start="nios2_gen2_0.irq"
+   end="spi_0.irq">
+  <parameter name="irqNumber" value="3" />
  </connection>
  <connection
    kind="reset"
@@ -857,6 +907,7 @@
    version="18.1"
    start="clk_0.clk_reset"
    end="jtag_uart_0.reset" />
+ <connection kind="reset" version="18.1" start="clk_0.clk_reset" end="spi_0.reset" />
  <connection kind="reset" version="18.1" start="clk_0.clk_reset" end="ram.reset1" />
  <connection
    kind="reset"
@@ -868,6 +919,11 @@
    version="18.1"
    start="nios2_gen2_0.debug_reset_request"
    end="jtag_uart_0.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="nios2_gen2_0.debug_reset_request"
+   end="spi_0.reset" />
  <connection
    kind="reset"
    version="18.1"
