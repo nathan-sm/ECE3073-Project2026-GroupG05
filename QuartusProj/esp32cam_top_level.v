@@ -129,8 +129,8 @@ module esp32cam_top_level (
 			// G Sensor
 			.gsens_int_export(GSENSOR_INT),
             
-			// usec counter
-			.usec_counter_export(usec_out),
+            // usec counter
+            .usec_counter_export(usec_out),
         
     );
 
