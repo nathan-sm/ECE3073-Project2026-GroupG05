@@ -123,7 +123,10 @@ module esp32cam_top_level (
 			.spi_0_MISO					(spi_poci),
 			.spi_0_MOSI					(spi_pico),
 			.spi_0_SCLK					(spi_sclk),
-			.spi_0_SS_n					(spi_ss_n)
+			.spi_0_SS_n					(spi_ss_n),
+			
+			// G Sensor
+			.gsens_int_export(GSENSOR_INT)
         
     );
 
