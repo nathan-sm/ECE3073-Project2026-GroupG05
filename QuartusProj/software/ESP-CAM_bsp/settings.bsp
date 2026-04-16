@@ -2,11 +2,11 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>08/04/2026 6:16:27 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1775636187226</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>C:\Users\ritwa\Documents\GitHub\ECE3073_G05\QuartusProj\software\ESP-CAM_bsp</BspGeneratedLocation>
-        <BspSettingsFile>.\settings.bsp</BspSettingsFile>
-        <SopcDesignFile>..\..\NiosSystem.sopcinfo</SopcDesignFile>
+        <BspGeneratedTimeStamp>Apr 16, 2026 2:17:34 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1776313054092</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/ESP-CAM_bsp</BspGeneratedLocation>
+        <BspSettingsFile>settings.bsp</BspSettingsFile>
+        <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
         <Cpu>nios2_gen2_0</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
