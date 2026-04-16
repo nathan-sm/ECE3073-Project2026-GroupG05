@@ -421,6 +421,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[35]
 set_global_assignment -name QIP_FILE PLL.qip
 set_global_assignment -name VERILOG_FILE vga_controller.v
+set_global_assignment -name VERILOG_FILE usec_counter.v
 set_global_assignment -name QIP_FILE pixel_buffer.qip
 set_global_assignment -name QIP_FILE vga_pll.qip
 set_global_assignment -name QIP_FILE NiosSystem/synthesis/NiosSystem.qip

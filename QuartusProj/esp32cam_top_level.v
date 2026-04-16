@@ -71,6 +71,7 @@ module esp32cam_top_level (
     wire        spi_poci;      // Controller In, Peripheral Out — muxed from active device
     wire        spi_sclk;      // Clock from Nios
     wire [1:0]  spi_ss_n;      // One-hot CS: [0]=ESP-CAM, [1]=GSENSOR
+    wire [31:0] usec_out;
 
     // ||PLL||
     
@@ -126,7 +127,10 @@ module esp32cam_top_level (
 			.spi_0_SS_n					(spi_ss_n),
 			
 			// G Sensor
-			.gsens_int_export(GSENSOR_INT)
+			.gsens_int_export(GSENSOR_INT),
+            
+            // usec counter
+            .usec_counter_export(usec_out),
         
     );
 
@@ -154,7 +158,13 @@ module esp32cam_top_level (
         .VGA_HS   (VGA_HS),
         .VGA_VS   (VGA_VS)
     );
-	 
+
+    // Microsecond counter for benchmarking
+    usec_counter u_usec (
+        .clk     (CLOCK_50),
+        .reset_n (KEY[0]),
+        .usec_out(usec_out)
+    ); 
 	 
     // ||Physical Pin Assignments & Logic||
     
