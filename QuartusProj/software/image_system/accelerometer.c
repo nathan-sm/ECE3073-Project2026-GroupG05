@@ -40,7 +40,7 @@
 
 #define CONFIG_LENGTH 16 * 2 // number of config details to send to initialise gyro
 
-#define MAX_COUNT 500000 // cycles to count to before printing
+#define MAX_COUNT 10 // cycles to count to before printing
 
 #define READ_X_AXIS 0xc0 | X_LB // enable read bit and multi byte
 #define READ_Y_AXIS 0xc0 | Y_LB // enable read bit and multi byte
@@ -85,7 +85,7 @@ static void gsens_isr(void* context)
 	flag_tap_double = 1;
 }
 
-int setup_gyro()
+int accel_setup()
 {
     // clear pending edge captures
     IOWR_ALTERA_AVALON_PIO_EDGE_CAP(GSENS_INT_BASE, 0x1);
@@ -116,7 +116,7 @@ int setup_gyro()
     return 0;
 }
 
-int update_gyro()
+int accel_update()
 {
 	// detect if interrupt has fired
 	if (flag_tap_double == 1)
@@ -138,24 +138,37 @@ int update_gyro()
 	g_print_counter++;
 	if (g_print_counter >= MAX_COUNT)
 	{
-		// capture array for low and high byte from the SPI read
-		alt_u8 axis_data[6];
-		int16_t x_val, y_val, z_val;
+		DeviceRotation rotation = accel_get_device_rotation();
+		accel_print_device_rotation("X axis: %4d\t Y axis: %4d\t Z axis %4d\n", &rotation);
 
-		// enabling both read bit (bit 7) and multi-byte bit (bit 6) with 0xC0
-		alt_u8 read_cmd = 0xC0 | X_LB;
-
-		alt_avalon_spi_command(SPI_0_BASE, 1, 1, &read_cmd, 6, axis_data, 0);
-
-		// 16 bit integers from 6 byte array, bit shifting
-
-		x_val = (int16_t)((axis_data[1] << 8) | axis_data[0]);
-		y_val = (int16_t)((axis_data[3] << 8) | axis_data[2]);
-		z_val = (int16_t)((axis_data[5] << 8) | axis_data[4]);
-
-		printf("X axis: %4d\t Y axis: %4d\t Z axis %4d\n",x_val,y_val,z_val);
 		g_print_counter = 0;
 	}
 
 	return 0;
+}
+
+DeviceRotation accel_get_device_rotation()
+{
+	DeviceRotation result;
+
+	// capture array for low and high byte from the SPI read
+	alt_u8 axis_data[6];
+
+	// enabling both read bit (bit 7) and multi-byte bit (bit 6) with 0xC0
+	alt_u8 read_cmd = 0xC0 | X_LB;
+
+	alt_avalon_spi_command(SPI_0_BASE, 1, 1, &read_cmd, 6, axis_data, 0);
+
+	// 16 bit integers from 6 byte array, bit shifting
+
+	result.x_axis = (((int16_t)(axis_data[1]) << 8) | axis_data[0]);
+	result.y_axis = (((int16_t)(axis_data[3]) << 8) | axis_data[2]);
+	result.z_axis = (((int16_t)(axis_data[5]) << 8) | axis_data[4]);
+
+	return result;
+}
+
+void accel_print_device_rotation(const char *message, const DeviceRotation *rotation)
+{
+	printf(message, rotation->x_axis, rotation->y_axis, rotation->z_axis);
 }

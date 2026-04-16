@@ -183,7 +183,7 @@ int main(void) {
     	quad_image_buffer[i] = 0xff;
     }
 
-    if (setup_gyro())
+    if (accel_setup())
     {
     	printf("Gyro init failed.\n");
     	return 1;
@@ -214,10 +214,9 @@ int main(void) {
 
 //        printf("Frame written to pixel buffer\n");
 
-        if (update_gyro())
+        if (accel_update())
         {
         	printf("Gyro read failed\n");
-        	return 2;
         }
     }
 
