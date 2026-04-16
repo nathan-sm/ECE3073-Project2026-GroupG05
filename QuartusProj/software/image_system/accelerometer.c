@@ -38,19 +38,7 @@
 #define Z_LB 0x36
 #define Z_HB 0x37
 
-// Gyro read Registers
-#define INT_SOURCE 0x30
-#define X_LB 0x32
-#define X_HB 0x33
-#define Y_LB 0x34
-#define Y_HB 0x35
-#define Z_LB 0x36
-#define Z_HB 0x37
-
-#define CONFIG_LENGHT 16 * 2 // number of config details to send to initialise gyro
-
-// flag for interrupt
-volatile int flag_tap_double = 0;
+#define CONFIG_LENGTH 16 * 2 // number of config details to send to initialise gyro
 
 #define MAX_COUNT 500000 // cycles to count to before printing
 
@@ -59,7 +47,7 @@ volatile int flag_tap_double = 0;
 #define READ_Z_AXIS 0xc0 | Z_LB // enable read bit and multi byte
 
 // define desired setup settings with write location then value to write
-alt_u8 gyro_config[CONFIG_LENGHT] = {
+alt_u8 gyro_config[CONFIG_LENGTH] = {
     DATA_FORMAT, 0x0b, // 4-wire SPI, full resolution, +/- 16g
     THRESH_ACT, 0x04,
     THRESH_INACT, 0x02,
@@ -84,6 +72,9 @@ alt_u8 gyro_config[CONFIG_LENGHT] = {
 
 static int g_print_counter = 0;
 
+// flag for interrupt
+volatile int flag_tap_double = 0;
+
 // ISR
 static void gsens_isr(void* context)
 {
@@ -94,12 +85,8 @@ static void gsens_isr(void* context)
 	flag_tap_double = 1;
 }
 
-
-
 int setup_gyro()
 {
-    printf("Start accel.\n"); // basic print statement to ensure UART is working
-
     // clear pending edge captures
     IOWR_ALTERA_AVALON_PIO_EDGE_CAP(GSENS_INT_BASE, 0x1);
 
@@ -115,7 +102,7 @@ int setup_gyro()
     alt_u8 gyro_data_out;
 
     // accel select slave 1 (second argument)
-    for (int i = 0; i < CONFIG_LENGHT; i +=2) {
+    for (int i = 0; i < CONFIG_LENGTH; i += 2) {
     	alt_avalon_spi_command(SPI_0_BASE, 1, 2, gyro_config + i, 0, &gyro_data_out, 0);
     }
 
@@ -146,14 +133,14 @@ int update_gyro()
 		alt_avalon_spi_command(SPI_0_BASE , 1, 1, &initial_clear_cmd, 1, &initial_source_val, 0);
 
 	}
+
 	// increment counter
 	g_print_counter++;
-	if (g_print_counter >=MAX_COUNT)
+	if (g_print_counter >= MAX_COUNT)
 	{
 		// capture array for low and high byte from the SPI read
 		alt_u8 axis_data[6];
 		int16_t x_val, y_val, z_val;
-
 
 		// enabling both read bit (bit 7) and multi-byte bit (bit 6) with 0xC0
 		alt_u8 read_cmd = 0xC0 | X_LB;
