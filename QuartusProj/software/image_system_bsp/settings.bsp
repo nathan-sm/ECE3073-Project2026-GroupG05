@@ -2,11 +2,11 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Apr 16, 2026 2:54:12 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1776315252326</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/image_system_bsp</BspGeneratedLocation>
-        <BspSettingsFile>./settings.bsp</BspSettingsFile>
-        <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
+        <BspGeneratedTimeStamp>Apr 16, 2026 3:44:59 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1776318299245</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>C:\Users\natha\Documents\ECE3073\ECE3073-Project2026-Group05\QuartusProj\software\image_system_bsp</BspGeneratedLocation>
+        <BspSettingsFile>settings.bsp</BspSettingsFile>
+        <SopcDesignFile>..\..\NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
         <Cpu>nios2_gen2_0</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
@@ -917,62 +917,68 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <slaveDescriptor>usec_counter</slaveDescriptor>
                 <addressRange>0x04041020 - 0x0404102F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>img_addy</slaveDescriptor>
+                <slaveDescriptor>gsens_int</slaveDescriptor>
                 <addressRange>0x04041030 - 0x0404103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>cam_redy</slaveDescriptor>
+                <slaveDescriptor>img_addy</slaveDescriptor>
                 <addressRange>0x04041040 - 0x0404104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>pixel_dat</slaveDescriptor>
+                <slaveDescriptor>cam_redy</slaveDescriptor>
                 <addressRange>0x04041050 - 0x0404105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>hex53</slaveDescriptor>
+                <slaveDescriptor>pixel_dat</slaveDescriptor>
                 <addressRange>0x04041060 - 0x0404106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>hex20</slaveDescriptor>
+                <slaveDescriptor>hex53</slaveDescriptor>
                 <addressRange>0x04041070 - 0x0404107F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>key</slaveDescriptor>
+                <slaveDescriptor>hex20</slaveDescriptor>
                 <addressRange>0x04041080 - 0x0404108F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>sw</slaveDescriptor>
+                <slaveDescriptor>key</slaveDescriptor>
                 <addressRange>0x04041090 - 0x0404109F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>ledr</slaveDescriptor>
+                <slaveDescriptor>sw</slaveDescriptor>
                 <addressRange>0x040410A0 - 0x040410AF</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
+                <slaveDescriptor>ledr</slaveDescriptor>
+                <addressRange>0x040410B0 - 0x040410BF</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
                 <slaveDescriptor>jtag_uart_0</slaveDescriptor>
-                <addressRange>0x040410B0 - 0x040410B7</addressRange>
+                <addressRange>0x040410C0 - 0x040410C7</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>
