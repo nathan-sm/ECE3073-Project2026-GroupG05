@@ -26,6 +26,42 @@
 // Global buffer placed in SDRAM
 uint8_t image_buffer[IMAGE_SIZE];
 
+// ---- TASK 4: FPS display ----
+void display_fps(unsigned int elapsed) {
+    float fps = 1000000.0f / elapsed;
+
+    const uint8_t SEG[10] = {
+        0xC0, // 0
+        0xF9, // 1
+        0xA4, // 2
+        0xB0, // 3
+        0x99, // 4
+        0x92, // 5
+        0x82, // 6
+        0xF8, // 7
+        0x80, // 8
+        0x90  // 9
+    };
+
+    unsigned int fps_scaled = (unsigned int)(fps * 100);
+
+    int d3 = (fps_scaled / 1000) % 10;
+    int d2 = (fps_scaled / 100)  % 10;
+    int d1 = (fps_scaled / 10)   % 10;
+    int d0 =  fps_scaled         % 10;
+
+    uint8_t hex3 = SEG[d3];
+    uint8_t hex2 = SEG[d2] & ~(1 << 7); // decimal point on HEX2
+    uint8_t hex1 = SEG[d1];
+    uint8_t hex0 = SEG[d0];
+
+    uint32_t hex0_2 = ((uint32_t)hex2 << 16) | ((uint32_t)hex1 << 8) | hex0;
+    uint32_t hex3_5 = (0xFF << 16) | (0xFF << 8) | hex3;
+
+    IOWR(HEX20_BASE, 0, hex0_2);
+    IOWR(HEX53_BASE, 0, hex3_5);
+}
+
 // Send command byte then receive a full 320x240 frame into the pixel buffer
 void receive_frame(uint8_t cmd) {
 
@@ -34,10 +70,14 @@ void receive_frame(uint8_t cmd) {
                            IMAGE_SIZE, image_buffer,
                            0);
 
+    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0); // TASK 4: start timer
+
     for (uint32_t i = 0; i < IMAGE_SIZE; i++) {
         IOWR(PIXEL_DAT_BASE, 0, image_buffer[i] >> 4);
         IOWR(IMG_ADDY_BASE,  0, i);
     }
+
+    display_fps(IORD(USEC_COUNTER_BASE, 0) - t_start); // TASK 4: display FPS
 }
 
 int main(void) {
