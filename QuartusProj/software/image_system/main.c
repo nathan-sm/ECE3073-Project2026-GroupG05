@@ -27,8 +27,11 @@
 uint8_t image_buffer[IMAGE_SIZE];
 
 // ---- TASK 4: FPS display ----
-void display_fps(unsigned int elapsed) {
-    float fps = 1000000.0f / elapsed;
+void display_fps(uint32_t elapsed) {
+	// Stores 100 x FPS so that we can do integer division
+    uint32_t fps_100 = 100000000 / elapsed;
+
+//    printf("100x FPS: %lu, elapsed: %lu\n", fps_100, elapsed);
 
     const uint8_t SEG[10] = {
         0xC0, // 0
@@ -43,12 +46,10 @@ void display_fps(unsigned int elapsed) {
         0x90  // 9
     };
 
-    unsigned int fps_scaled = (unsigned int)(fps * 100);
-
-    int d3 = (fps_scaled / 1000) % 10;
-    int d2 = (fps_scaled / 100)  % 10;
-    int d1 = (fps_scaled / 10)   % 10;
-    int d0 =  fps_scaled         % 10;
+    int d3 = (fps_100 / 1000) % 10;
+    int d2 = (fps_100 / 100)  % 10;
+    int d1 = (fps_100 / 10)   % 10;
+    int d0 =  fps_100         % 10;
 
     uint8_t hex3 = SEG[d3];
     uint8_t hex2 = SEG[d2] & ~(1 << 7); // decimal point on HEX2
@@ -63,19 +64,22 @@ void display_fps(unsigned int elapsed) {
 }
 
 // Send command byte then receive a full 320x240 frame into the pixel buffer
-void receive_frame(uint8_t cmd) {
+void receive_frame(uint8_t cmd)
+{
+    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0); // TASK 4: start timer
 
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &cmd,
                            IMAGE_SIZE, image_buffer,
                            0);
 
-    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0); // TASK 4: start timer
 
     for (uint32_t i = 0; i < IMAGE_SIZE; i++) {
         IOWR(PIXEL_DAT_BASE, 0, image_buffer[i] >> 4);
         IOWR(IMG_ADDY_BASE,  0, i);
     }
+
+//    for (uint32_t i = 0; i < 0xfffff; i++);
 
     display_fps(IORD(USEC_COUNTER_BASE, 0) - t_start); // TASK 4: display FPS
 }
