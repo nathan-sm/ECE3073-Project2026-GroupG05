@@ -50,7 +50,7 @@ int main(void) {
                            1, &startup_cmd,
                            0, NULL, 0);
 
-    if (setup_gyro())
+    if (accel_setup())
     {
     	printf("Gyro init failed.\n");
     	return 1;
@@ -66,10 +66,9 @@ int main(void) {
 
 //        printf("Frame written to pixel buffer\n");
 
-        if (update_gyro())
+        if (accel_update())
         {
         	printf("Gyro read failed\n");
-        	return 2;
         }
     }
 
