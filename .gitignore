@@ -119,5 +119,7 @@ software/*/Makefile
 **/software/*/*.map
 **/software/*/*.objdump
 **/software/*/readme.txt
+**/software/*/drivers/**
+**/software/*/HAL/**
 
 .claude/

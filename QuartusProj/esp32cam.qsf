@@ -423,7 +423,6 @@ set_global_assignment -name QIP_FILE PLL.qip
 set_global_assignment -name VERILOG_FILE vga_controller.v
 set_global_assignment -name QIP_FILE pixel_buffer.qip
 set_global_assignment -name QIP_FILE vga_pll.qip
-set_global_assignment -name VERILOG_FILE esp32cam.v
 set_global_assignment -name QIP_FILE NiosSystem/synthesis/NiosSystem.qip
 set_global_assignment -name VERILOG_FILE esp32cam_top_level.v
 set_global_assignment -name QIP_FILE sdram_pll.qip
