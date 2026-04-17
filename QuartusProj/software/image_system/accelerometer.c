@@ -134,7 +134,7 @@ int update_gyro()
 	// detect if interrupt has fired
 	if (flag_tap_double == 1)
 	{
-		printf("Detected double tap\n");
+//		printf("Detected double tap\n");
 
 		// reset flag
 		flag_tap_double = 0;
@@ -145,15 +145,9 @@ int update_gyro()
 		alt_u8 initial_source_val;
 		alt_avalon_spi_command(SPI_0_BASE , 1, 1, &initial_clear_cmd, 1, &initial_source_val, 0);
 
-	}
-	// increment counter
-	g_print_counter++;
-	if (g_print_counter >=MAX_COUNT)
-	{
 		// capture array for low and high byte from the SPI read
 		alt_u8 axis_data[6];
 		int16_t x_val, y_val, z_val;
-
 
 		// enabling both read bit (bit 7) and multi-byte bit (bit 6) with 0xC0
 		alt_u8 read_cmd = 0xC0 | X_LB;
@@ -166,8 +160,8 @@ int update_gyro()
 		y_val = (int16_t)((axis_data[3] << 8) | axis_data[2]);
 		z_val = (int16_t)((axis_data[5] << 8) | axis_data[4]);
 
-		printf("X axis: %4d\t Y axis: %4d\t Z axis %4d\n",x_val,y_val,z_val);
-		g_print_counter = 0;
+		printf("Double tap: X axis: %4d\t Y axis: %4d\t Z axis %4d\n",x_val,y_val,z_val);
+
 	}
 
 	return 0;
