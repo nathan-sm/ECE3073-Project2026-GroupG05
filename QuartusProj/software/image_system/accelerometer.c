@@ -75,6 +75,14 @@ static int g_print_counter = 0;
 // flag for interrupt
 volatile int flag_tap_double = 0;
 
+// Function to call when a double tap occurs
+void (*g_doubleTapCallback)() = 0;
+
+void doubletap_callback_default()
+{
+	printf("Detected double tap\n");
+}
+
 // ISR
 static void gsens_isr(void* context)
 {
@@ -106,6 +114,8 @@ int accel_setup()
     	alt_avalon_spi_command(SPI_0_BASE, 1, 2, gyro_config + i, 0, &gyro_data_out, 0);
     }
 
+    gyro_set_dtap_callback(&doubletap_callback_default);
+
     printf("Accelerometer initialised\n");
 
     // clears the interrupt latency on the accelerometer, when the reg is read
@@ -121,8 +131,6 @@ int accel_update()
 	// detect if interrupt has fired
 	if (flag_tap_double == 1)
 	{
-		printf("Detected double tap\n");
-
 		// reset flag
 		flag_tap_double = 0;
 
@@ -132,6 +140,10 @@ int accel_update()
 		alt_u8 initial_source_val;
 		alt_avalon_spi_command(SPI_0_BASE , 1, 1, &initial_clear_cmd, 1, &initial_source_val, 0);
 
+		if (g_doubleTapCallback)
+		{
+			g_doubleTapCallback();
+		}
 	}
 
 	// increment counter
@@ -171,4 +183,9 @@ DeviceRotation accel_get_device_rotation()
 void accel_print_device_rotation(const char *message, const DeviceRotation *rotation)
 {
 	printf(message, rotation->x_axis, rotation->y_axis, rotation->z_axis);
+}
+
+void gyro_set_dtap_callback(void (*callback)())
+{
+	g_doubleTapCallback = callback;
 }
