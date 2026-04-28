@@ -42,7 +42,7 @@
 *.pin
 *.pof
 *.ptf.*
-# *.qar  # this has been commented out, however you are free to un-comment it if you wish
+**.qar
 *.qarlog
 *.qws
 *.rpt
