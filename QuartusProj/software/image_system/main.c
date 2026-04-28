@@ -119,46 +119,54 @@ uint32_t display_full_image()
 	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
     for (uint32_t i = 0; i < FULL_IMAGE_SIZE; i++) {
-        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
         IOWR(IMG_ADDY_BASE,  0, i);
+        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
     }
 
     return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
-/** Display the four images currently contained in the quad_image_buffer.
+/** Display one of the images in quad_display_buffer on the screen.
+ *
+ * @param imageIndex Which image to display
+ * @param displayIndex Where on the display to place the image (0 - top left, 1 - top right, 2 - bottom left, 3 - bottom right)
  *
  * @returns Time taken to transfer images, in ms.
  */
-uint32_t display_quad_image()
+uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 {
     unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
-    for (uint32_t imageIndex = 0; imageIndex < 4; imageIndex++)
-    {
-    	uint32_t imgStartAddr = imageIndex * QUAD_IMAGE_SIZE;
-    	uint32_t pixelBufferStartAddr = 0;
+	uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
+	uint32_t pixelBufferAddr = 0;
 
-    	if (imageIndex & 0x1)
-    	{
-    		pixelBufferStartAddr += QUAD_IMAGE_WIDTH;
-    	}
+	// If on the right, move destination over by half the display width
+	if (displayIndex & 0x1)
+	{
+		pixelBufferAddr += QUAD_IMAGE_WIDTH;
+	}
 
-    	if (imageIndex & 0x2)
-    	{
-    		pixelBufferStartAddr += QUAD_IMAGE_SIZE * 2;
-    	}
+	// If on the bottom, move destination down by half the display height
+	if (displayIndex & 0x2)
+	{
+		pixelBufferAddr += QUAD_IMAGE_SIZE * 2;
+	}
 
-		for (uint32_t i = 0; i < QUAD_IMAGE_SIZE; i++) {
-			uint32_t imageAddr = imgStartAddr + i;
-			uint32_t line = i / QUAD_IMAGE_WIDTH;
-			uint32_t col = i % QUAD_IMAGE_WIDTH;
-			uint32_t pixelBufferAddr = pixelBufferStartAddr + (line * FULL_IMAGE_WIDTH) + col;
-
-			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imageAddr] >> 4);
+	// Double loop over quad-size image, by lines then pixels
+	for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++)
+	{
+		for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++)
+		{
 			IOWR(IMG_ADDY_BASE,  0, pixelBufferAddr);
+			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imgAddr] >> 4);
+
+			imgAddr++;
+			pixelBufferAddr++;
 		}
-    }
+
+		// At the end of each line, move the destination to the next line of the display
+		pixelBufferAddr += FULL_IMAGE_WIDTH;
+	}
 
     return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
@@ -179,7 +187,7 @@ int main(void) {
 
     for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
     {
-    	quad_image_buffer[i] = 0xff;
+    	quad_image_buffer[i] = 0x00;
     }
 
     if (accel_setup())
@@ -187,6 +195,9 @@ int main(void) {
     	printf("Gyro init failed.\n");
     	return 1;
     }
+
+    // Array of which image to display in each position in quad display mode
+    uint32_t quadDisplayIndices[4] = { 0, 1, 2, 3 };
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
@@ -201,7 +212,10 @@ int main(void) {
 			uint32_t frameWriteTime = 0;
 			if (isQuad)
 			{
-				frameWriteTime = display_quad_image(0, 0);
+				frameWriteTime += display_quad_image(quadDisplayIndices[0], 0);
+				frameWriteTime += display_quad_image(quadDisplayIndices[1], 0);
+				frameWriteTime += display_quad_image(quadDisplayIndices[2], 0);
+				frameWriteTime += display_quad_image(quadDisplayIndices[3], 0);
 			}
 			else
 			{
