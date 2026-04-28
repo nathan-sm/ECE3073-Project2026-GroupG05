@@ -172,6 +172,15 @@ int main(void) {
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
+    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
+    {
+    	full_image_buffer[i] = 0x00;
+    }
+
+    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
+    {
+    	quad_image_buffer[i] = 0xff;
+    }
 
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
     {
