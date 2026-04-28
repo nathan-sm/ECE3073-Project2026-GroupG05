@@ -12,9 +12,11 @@
 #define ACCEL_SS        1       // spi_ss_n[1]
 
 // Image Parameters
-#define FULL_IMAGE_WIDTH     320
-#define FULL_IMAGE_HEIGHT    240
-#define FULL_IMAGE_SIZE      (FULL_IMAGE_WIDTH * FULL_IMAGE_HEIGHT)    // 76,800 pixels
+#define DISPLAY_WIDTH		320
+#define DISPLAY_HEIGHT		240
+#define FULL_IMAGE_WIDTH    320
+#define FULL_IMAGE_HEIGHT   240
+#define FULL_IMAGE_SIZE     (FULL_IMAGE_WIDTH * FULL_IMAGE_HEIGHT)    // 76,800 pixels
 #define QUAD_IMAGE_WIDTH	(FULL_IMAGE_WIDTH/2)
 #define QUAD_IMAGE_HEIGHT	(FULL_IMAGE_HEIGHT/2)
 #define QUAD_IMAGE_SIZE		(QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
@@ -37,6 +39,9 @@ uint8_t g_camLastConfig = 0x0;
 // Global buffer placed in SDRAM
 uint8_t full_image_buffer[FULL_IMAGE_SIZE];
 uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
+
+// Array of which image to display in each position in quad display mode
+uint32_t g_quadDisplayIndices[4] = { 0, 1, 2, 3 };
 
 /** Display an FPS value on the 7-segment displays
  *
@@ -171,6 +176,24 @@ uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
     return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
+void doubletap_callback()
+{
+	uint16_t swStatus = IORD(SW_BASE, 0);
+	bool isQuad = swStatus & 0x1;
+
+	if (!isQuad)
+		return;
+
+	DeviceRotation deviceRotation = accel_get_device_rotation();
+
+	uint8_t imageX = deviceRotation.x_axis < 0 ? 0 : 1;
+	uint8_t imageY = deviceRotation.y_axis < 0 ? 0 : 1;
+
+	uint8_t imageIndex = (imageY << 1) | imageX;
+
+	g_quadDisplayIndices[imageIndex] = (g_quadDisplayIndices[imageIndex] + 1) % 4;
+}
+
 int main(void) {
     printf("ESP-CAM SPI initialised\n");
 
@@ -180,11 +203,14 @@ int main(void) {
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
+
+    // Initialize full image buffer
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
     {
     	full_image_buffer[i] = 0x00;
     }
 
+    // Initialize quad image buffer
     for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
     {
     	quad_image_buffer[i] = 0x00;
@@ -206,9 +232,6 @@ int main(void) {
     	return 1;
     }
 
-    // Array of which image to display in each position in quad display mode
-    uint32_t quadDisplayIndices[4] = { 0, 1, 2, 3 };
-
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
         if (IORD(CAM_REDY_BASE, 0) == 1)
@@ -222,10 +245,10 @@ int main(void) {
 			uint32_t frameWriteTime = 0;
 			if (isQuad)
 			{
-				frameWriteTime += display_quad_image(quadDisplayIndices[0], 0);
-				frameWriteTime += display_quad_image(quadDisplayIndices[1], 0);
-				frameWriteTime += display_quad_image(quadDisplayIndices[2], 0);
-				frameWriteTime += display_quad_image(quadDisplayIndices[3], 0);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[0], 0);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[1], 0);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[2], 0);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[3], 0);
 			}
 			else
 			{
