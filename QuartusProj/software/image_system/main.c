@@ -45,7 +45,8 @@ uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
 // Array of which image to display in each position in quad display mode
 uint32_t g_quadDisplayIndices[4] = { 0, 1, 2, 3 };
 // Threshold for controlling quad display using the gyro
-#define GYRO_CONTROL_THRESH 90
+#define GYRO_CONTROL_THRESH_SINGLE 60
+#define GYRO_CONTROL_THRESH_DOUBLE 90
 
 /** Display an FPS value on the 7-segment displays
  *
@@ -191,8 +192,9 @@ void doubletap_callback()
 
 	DeviceRotation deviceRotation = accel_get_device_rotation();
 
-	if (abs(deviceRotation.x_axis) < GYRO_CONTROL_THRESH
-			|| abs(deviceRotation.y_axis) < GYRO_CONTROL_THRESH)
+	if ((abs(deviceRotation.x_axis) < GYRO_CONTROL_THRESH_SINGLE
+			&& abs(deviceRotation.y_axis) < GYRO_CONTROL_THRESH_SINGLE)
+			|| abs(deviceRotation.x_axis) + abs(deviceRotation.y_axis) < GYRO_CONTROL_THRESH_DOUBLE)
 		return;
 
 	uint8_t imageX = deviceRotation.x_axis > 0 ? 0 : 1;
@@ -259,9 +261,9 @@ int main(void) {
 			if (isQuad)
 			{
 				frameWriteTime += display_quad_image(g_quadDisplayIndices[0], 0);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[1], 0);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[2], 0);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[3], 0);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[1], 1);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[2], 2);
+				frameWriteTime += display_quad_image(g_quadDisplayIndices[3], 3);
 			}
 			else
 			{
