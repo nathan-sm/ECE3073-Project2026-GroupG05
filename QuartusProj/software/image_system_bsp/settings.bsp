@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Apr 28, 2026 4:17:52 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1777357072082</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Apr 30, 2026 1:25:13 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1777519513505</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/image_system_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
@@ -984,7 +984,7 @@
         </MemoryMap>
         <LinkerSection>
                 <sectionName>.text</sectionName>
-                <regionName>sdram_control</regionName>
+                <regionName>ram</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.rodata</sectionName>

@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+
 #include "system.h"
 #include "io.h"
 #include "altera_avalon_spi.h"
@@ -42,6 +44,8 @@ uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
 
 // Array of which image to display in each position in quad display mode
 uint32_t g_quadDisplayIndices[4] = { 0, 1, 2, 3 };
+// Threshold for controlling quad display using the gyro
+#define GYRO_CONTROL_THRESH 90
 
 /** Display an FPS value on the 7-segment displays
  *
@@ -170,12 +174,13 @@ uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 		}
 
 		// At the end of each line, move the destination to the next line of the display
-		pixelBufferAddr += FULL_IMAGE_WIDTH;
+		pixelBufferAddr += FULL_IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
 	}
 
     return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
+// Controls quad-display mode by tilting and double-tapping the device
 void doubletap_callback()
 {
 	uint16_t swStatus = IORD(SW_BASE, 0);
@@ -186,12 +191,18 @@ void doubletap_callback()
 
 	DeviceRotation deviceRotation = accel_get_device_rotation();
 
-	uint8_t imageX = deviceRotation.x_axis < 0 ? 0 : 1;
+	if (abs(deviceRotation.x_axis) < GYRO_CONTROL_THRESH
+			|| abs(deviceRotation.y_axis) < GYRO_CONTROL_THRESH)
+		return;
+
+	uint8_t imageX = deviceRotation.x_axis > 0 ? 0 : 1;
 	uint8_t imageY = deviceRotation.y_axis < 0 ? 0 : 1;
 
 	uint8_t imageIndex = (imageY << 1) | imageX;
 
 	g_quadDisplayIndices[imageIndex] = (g_quadDisplayIndices[imageIndex] + 1) % 4;
+
+	printf("Changed image display: [%lu, %lu, %lu, %lu]\n", g_quadDisplayIndices[0], g_quadDisplayIndices[1], g_quadDisplayIndices[2], g_quadDisplayIndices[3]);
 }
 
 int main(void) {
@@ -221,6 +232,8 @@ int main(void) {
     	printf("Gyro init failed.\n");
     	return 1;
     }
+
+    gyro_set_dtap_callback(&doubletap_callback);
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
