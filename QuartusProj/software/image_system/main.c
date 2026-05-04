@@ -124,16 +124,12 @@ void receive_frame(bool isQuad)
  *
  * @returns Time taken to transfer image, in ms.
  */
-uint32_t display_full_image()
+void display_full_image()
 {
-	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
-
     for (uint32_t i = 0; i < FULL_IMAGE_SIZE; i++) {
         IOWR(IMG_ADDY_BASE,  0, i);
         IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
     }
-
-    return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
 /** Display one of the images in quad_display_buffer on the screen.
@@ -143,10 +139,8 @@ uint32_t display_full_image()
  *
  * @returns Time taken to transfer images, in ms.
  */
-uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
+void display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 {
-    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
-
 	uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
 	uint32_t pixelBufferAddr = 0;
 
@@ -177,8 +171,6 @@ uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 		// At the end of each line, move the destination to the next line of the display
 		pixelBufferAddr += FULL_IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
 	}
-
-    return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
 // Controls quad-display mode by tilting and double-tapping the device
@@ -216,6 +208,15 @@ int main(void) {
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
+    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
+    {
+    	full_image_buffer[i] = 0x00;
+    }
+
+    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
+    {
+    	quad_image_buffer[i] = 0x00;
+    }
 
     // Initialize full image buffer
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
@@ -246,6 +247,8 @@ int main(void) {
     }
 
     gyro_set_dtap_callback(&doubletap_callback);
+    // Array of which image to display in each position in quad display mode
+    uint32_t quadDisplayIndices[4] = { 0, 1, 2, 3 };
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
@@ -254,23 +257,27 @@ int main(void) {
         	uint16_t swStatus = IORD(SW_BASE, 0);
         	bool isQuad = swStatus & 0x1;
 
+        	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
+
 			// Fetch and display the frame
 			receive_frame(isQuad);
 
-			uint32_t frameWriteTime = 0;
 			if (isQuad)
 			{
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[0], 0);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[1], 1);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[2], 2);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[3], 3);
+				display_quad_image(g_quadDisplayIndices[0], 0);
+				display_quad_image(g_quadDisplayIndices[1], 1);
+				display_quad_image(g_quadDisplayIndices[2], 2);
+				display_quad_image(g_quadDisplayIndices[3], 3);
 			}
 			else
 			{
-				frameWriteTime = display_full_image();
+				display_full_image();
 			}
 
-			display_fps(frameWriteTime);
+
+		    uint32_t frameTime = IORD(USEC_COUNTER_BASE, 0) - t_start;
+
+			display_fps(frameTime);
         }
 
 //        printf("Frame written to pixel buffer\n");
