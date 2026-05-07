@@ -121,5 +121,6 @@ software/*/Makefile
 **/software/*/readme.txt
 **/software/*/drivers/**
 **/software/*/HAL/**
+**/software/*/**.a
 
 .claude/

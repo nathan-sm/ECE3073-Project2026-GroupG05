@@ -162,7 +162,7 @@ void display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 		for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++)
 		{
 			IOWR(IMG_ADDY_BASE,  0, pixelBufferAddr);
-			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imgAddr] >> 4);
+			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imgAddr - 1] >> 4);
 
 			imgAddr++;
 			pixelBufferAddr++;
@@ -208,15 +208,6 @@ int main(void) {
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
-    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
-    {
-    	full_image_buffer[i] = 0x00;
-    }
-
-    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
-    {
-    	quad_image_buffer[i] = 0x00;
-    }
 
     // Initialize full image buffer
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
@@ -230,16 +221,6 @@ int main(void) {
     	quad_image_buffer[i] = 0x00;
     }
 
-    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
-    {
-    	full_image_buffer[i] = 0x00;
-    }
-
-    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
-    {
-    	quad_image_buffer[i] = 0xff;
-    }
-
     if (accel_setup())
     {
     	printf("Gyro init failed.\n");
@@ -247,8 +228,6 @@ int main(void) {
     }
 
     gyro_set_dtap_callback(&doubletap_callback);
-    // Array of which image to display in each position in quad display mode
-    uint32_t quadDisplayIndices[4] = { 0, 1, 2, 3 };
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
