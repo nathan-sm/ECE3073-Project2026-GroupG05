@@ -153,13 +153,13 @@ void receive_frame(bool isQuad)
  *
  * @returns Time taken to transfer image, in ms.
  */
-uint32_t display_full_image()
+uint32_t display_full_image(uint8_t *buffer)
 {
 	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
     for (uint32_t i = 0; i < FULL_IMAGE_SIZE; i++) {
         IOWR(IMG_ADDY_BASE,  0, i);
-        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
+        IOWR(PIXEL_DAT_BASE, 0, buffer[i] >> 4);
     }
 
     return IORD(USEC_COUNTER_BASE, 0) - t_start;
@@ -172,7 +172,7 @@ uint32_t display_full_image()
  *
  * @returns Time taken to transfer images, in ms.
  */
-uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
+uint32_t display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
 {
     unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
@@ -197,7 +197,7 @@ uint32_t display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 		for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++)
 		{
 			IOWR(IMG_ADDY_BASE,  0, pixelBufferAddr);
-			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imgAddr] >> 4);
+			IOWR(PIXEL_DAT_BASE, 0, buffer[imgAddr] >> 4);
 
 			imgAddr++;
 			pixelBufferAddr++;
@@ -270,26 +270,56 @@ int main(void) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
         if (IORD(CAM_REDY_BASE, 0) == 1)
         {
-        	uint16_t swStatus = IORD(SW_BASE, 0);
-        	bool isQuad = swStatus & 0x1;
+            uint16_t swStatus = IORD(SW_BASE, 0);
+            bool isQuad = swStatus & 0x1;
+            int processMode = (swStatus >> 1) & 0x3;  // SW[2:1]
 
-			// Fetch and display the frame
-			receive_frame(isQuad);
+            // Fetch raw frame from camera
+            receive_frame(isQuad);
 
-			uint32_t frameWriteTime = 0;
-			if (isQuad)
-			{
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[0], 0);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[1], 1);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[2], 2);
-				frameWriteTime += display_quad_image(g_quadDisplayIndices[3], 3);
-			}
-			else
-			{
-				frameWriteTime = display_full_image();
-			}
+            // Start timing (covers processing + display)
+            unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
-			display_fps(frameWriteTime);
+            uint32_t frameWriteTime = 0;
+            if (isQuad)
+            {
+            	// In quad mode: apply processing to each slot
+
+            	// slot 0: raw
+            	memcpy(processed_quad, quad_image_buffer, QUAD_IMAGE_SIZE);
+
+            	// slot 1: flip
+            	process_flip(quad_image_buffer,
+            	             processed_quad + QUAD_IMAGE_SIZE,
+            	             QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
+
+            	// slot 2: blur
+            	memcpy(processed_quad + 2 * QUAD_IMAGE_SIZE,
+            	       quad_image_buffer, QUAD_IMAGE_SIZE);
+
+            	// slot 3: edge
+            	memcpy(processed_quad + 3 * QUAD_IMAGE_SIZE,
+            	       quad_image_buffer, QUAD_IMAGE_SIZE);
+
+                frameWriteTime += display_quad_image(processed_quad, g_quadDisplayIndices[0], 0);
+                frameWriteTime += display_quad_image(processed_quad, g_quadDisplayIndices[1], 1);
+                frameWriteTime += display_quad_image(processed_quad, g_quadDisplayIndices[2], 2);
+                frameWriteTime += display_quad_image(processed_quad, g_quadDisplayIndices[3], 3);
+            }
+            else
+            {
+                // In single mode: SW[2:1] selects processing
+                if (processMode == PROC_FLIP) {
+                    process_flip(full_image_buffer, processed_full,
+                                 FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT, 1);
+                } else {
+                    // Raw (and placeholders for blur/edge)
+                    memcpy(processed_full, full_image_buffer, FULL_IMAGE_SIZE);
+                }
+                frameWriteTime = display_full_image(processed_full);
+            }
+
+            display_fps(IORD(USEC_COUNTER_BASE, 0) - t_start);
         }
 
 //        printf("Frame written to pixel buffer\n");
