@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "system.h"
 #include "io.h"
@@ -42,11 +43,39 @@ uint8_t g_camLastConfig = 0x0;
 uint8_t full_image_buffer[FULL_IMAGE_SIZE];
 uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
 
+// Processed image output buffers
+uint8_t processed_full[FULL_IMAGE_SIZE];
+uint8_t processed_quad[QUAD_IMAGE_BUF_SIZE];
+
+// Processing mode (selected by SW[2:1])
+#define PROC_RAW   0
+#define PROC_FLIP  1
+#define PROC_BLUR  2
+#define PROC_EDGE  3
+
 // Array of which image to display in each position in quad display mode
 uint32_t g_quadDisplayIndices[4] = { 0, 1, 2, 3 };
 // Threshold for controlling quad display using the gyro
 #define GYRO_CONTROL_THRESH_SINGLE 60
 #define GYRO_CONTROL_THRESH_DOUBLE 90
+
+/**
+ * Flip image across both axes (180-degree rotation).
+ * bpp = bytes per pixel (1 for greyscale, future: 2 for packed RGB).
+ */
+void process_flip(uint8_t *input, uint8_t *output,
+                  int width, int height, int bpp)
+{
+    int totalPixels = width * height;
+    for (int i = 0; i < totalPixels; i++) {
+        int srcIdx = (totalPixels - 1 - i) * bpp;
+        int dstIdx = i * bpp;
+        for (int b = 0; b < bpp; b++) {
+            output[dstIdx + b] = input[srcIdx + b];
+        }
+    }
+}
+
 
 /** Display an FPS value on the 7-segment displays
  *

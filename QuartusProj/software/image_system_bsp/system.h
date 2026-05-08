@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Thu Apr 30 13:15:14 EST 2026
+ * Generated: Fri May 08 13:17:45 EST 2026
  */
 
 /*
@@ -443,7 +443,7 @@
 #define RAM_DUAL_PORT 0
 #define RAM_GUI_RAM_BLOCK_TYPE "AUTO"
 #define RAM_INIT_CONTENTS_FILE "NiosSystem_ram"
-#define RAM_INIT_MEM_CONTENT 0
+#define RAM_INIT_MEM_CONTENT 1
 #define RAM_INSTANCE_ID "NONE"
 #define RAM_IRQ -1
 #define RAM_IRQ_INTERRUPT_CONTROLLER_ID -1
