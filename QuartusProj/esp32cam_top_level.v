@@ -72,7 +72,6 @@ module esp32cam_top_level (
     wire        spi_sclk;      // Clock from Nios
     wire [1:0]  spi_ss_n;      // One-hot CS: [0]=ESP-CAM, [1]=GSENSOR
     wire [31:0] usec_out;
-    wire [31:0] usec_out;
 
     // ||PLL||
     
