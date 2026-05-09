@@ -10,6 +10,7 @@ module NiosSystem (
 	ledr_export,
 	pixel_dat_export,
 	reset_reset_n,
+	sdram_clk_clk,
 	sdram_control_addr,
 	sdram_control_ba,
 	sdram_control_cas_n,
@@ -36,6 +37,7 @@ module NiosSystem (
 	output	[9:0]	ledr_export;
 	output	[3:0]	pixel_dat_export;
 	input		reset_reset_n;
+	output		sdram_clk_clk;
 	output	[12:0]	sdram_control_addr;
 	output	[1:0]	sdram_control_ba;
 	output		sdram_control_cas_n;

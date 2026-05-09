@@ -1,10 +1,10 @@
 /*
  * system.h - SOPC Builder system and BSP software package information
  *
- * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Fri May 08 21:59:06 EST 2026
+ * Generated: Sun May 10 02:42:54 EST 2026
  */
 
 /*
@@ -62,7 +62,7 @@
 
 #define ALT_CPU_ARCHITECTURE "altera_nios2_gen2"
 #define ALT_CPU_BIG_ENDIAN 0
-#define ALT_CPU_BREAK_ADDR 0x04040820
+#define ALT_CPU_BREAK_ADDR 0x04000820
 #define ALT_CPU_CPU_ARCH_NIOS2_R1
 #define ALT_CPU_CPU_FREQ 50000000u
 #define ALT_CPU_CPU_ID_SIZE 1
@@ -73,7 +73,7 @@
 #define ALT_CPU_DCACHE_LINE_SIZE 32
 #define ALT_CPU_DCACHE_LINE_SIZE_LOG2 5
 #define ALT_CPU_DCACHE_SIZE 2048
-#define ALT_CPU_EXCEPTION_ADDR 0x04020020
+#define ALT_CPU_EXCEPTION_ADDR 0x00000020
 #define ALT_CPU_FLASH_ACCELERATOR_LINES 0
 #define ALT_CPU_FLASH_ACCELERATOR_LINE_SIZE 0
 #define ALT_CPU_FLUSHDA_SUPPORTED
@@ -91,10 +91,10 @@
 #define ALT_CPU_ICACHE_SIZE 4096
 #define ALT_CPU_INITDA_SUPPORTED
 #define ALT_CPU_INST_ADDR_WIDTH 0x1b
-#define ALT_CPU_NAME "nios2_gen2_0"
+#define ALT_CPU_NAME "image_proc"
 #define ALT_CPU_NUM_OF_SHADOW_REG_SETS 0
 #define ALT_CPU_OCI_VERSION 1
-#define ALT_CPU_RESET_ADDR 0x04020000
+#define ALT_CPU_RESET_ADDR 0x00000000
 
 
 /*
@@ -103,7 +103,7 @@
  */
 
 #define NIOS2_BIG_ENDIAN 0
-#define NIOS2_BREAK_ADDR 0x04040820
+#define NIOS2_BREAK_ADDR 0x04000820
 #define NIOS2_CPU_ARCH_NIOS2_R1
 #define NIOS2_CPU_FREQ 50000000u
 #define NIOS2_CPU_ID_SIZE 1
@@ -114,7 +114,7 @@
 #define NIOS2_DCACHE_LINE_SIZE 32
 #define NIOS2_DCACHE_LINE_SIZE_LOG2 5
 #define NIOS2_DCACHE_SIZE 2048
-#define NIOS2_EXCEPTION_ADDR 0x04020020
+#define NIOS2_EXCEPTION_ADDR 0x00000020
 #define NIOS2_FLASH_ACCELERATOR_LINES 0
 #define NIOS2_FLASH_ACCELERATOR_LINE_SIZE 0
 #define NIOS2_FLUSHDA_SUPPORTED
@@ -133,7 +133,7 @@
 #define NIOS2_INST_ADDR_WIDTH 0x1b
 #define NIOS2_NUM_OF_SHADOW_REG_SETS 0
 #define NIOS2_OCI_VERSION 1
-#define NIOS2_RESET_ADDR 0x04020000
+#define NIOS2_RESET_ADDR 0x00000000
 
 
 /*
@@ -142,11 +142,11 @@
  */
 
 #define __ALTERA_AVALON_JTAG_UART
+#define __ALTERA_AVALON_MUTEX
 #define __ALTERA_AVALON_NEW_SDRAM_CONTROLLER
-#define __ALTERA_AVALON_ONCHIP_MEMORY2
 #define __ALTERA_AVALON_PIO
-#define __ALTERA_AVALON_SPI
 #define __ALTERA_NIOS2_GEN2
+#define __ALTPLL
 
 
 /*
@@ -165,19 +165,19 @@
 #define ALT_NUM_INTERNAL_INTERRUPT_CONTROLLERS 1
 #define ALT_NUM_INTERRUPT_CONTROLLERS 1
 #define ALT_STDERR "/dev/jtag_uart_0"
-#define ALT_STDERR_BASE 0x40410c0
+#define ALT_STDERR_BASE 0x4001040
 #define ALT_STDERR_DEV jtag_uart_0
 #define ALT_STDERR_IS_JTAG_UART
 #define ALT_STDERR_PRESENT
 #define ALT_STDERR_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDIN "/dev/jtag_uart_0"
-#define ALT_STDIN_BASE 0x40410c0
+#define ALT_STDIN_BASE 0x4001040
 #define ALT_STDIN_DEV jtag_uart_0
 #define ALT_STDIN_IS_JTAG_UART
 #define ALT_STDIN_PRESENT
 #define ALT_STDIN_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDOUT "/dev/jtag_uart_0"
-#define ALT_STDOUT_BASE 0x40410c0
+#define ALT_STDOUT_BASE 0x4001040
 #define ALT_STDOUT_DEV jtag_uart_0
 #define ALT_STDOUT_IS_JTAG_UART
 #define ALT_STDOUT_PRESENT
@@ -186,12 +186,26 @@
 
 
 /*
+ * altpll_0 configuration
+ *
+ */
+
+#define ALTPLL_0_BASE 0x4001030
+#define ALTPLL_0_IRQ -1
+#define ALTPLL_0_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define ALTPLL_0_NAME "/dev/altpll_0"
+#define ALTPLL_0_SPAN 16
+#define ALTPLL_0_TYPE "altpll"
+#define ALT_MODULE_CLASS_altpll_0 altpll
+
+
+/*
  * cam_redy configuration
  *
  */
 
 #define ALT_MODULE_CLASS_cam_redy altera_avalon_pio
-#define CAM_REDY_BASE 0x4041050
+#define CAM_REDY_BASE 0x4001020
 #define CAM_REDY_BIT_CLEARING_EDGE_REGISTER 0
 #define CAM_REDY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define CAM_REDY_CAPTURE 0
@@ -213,39 +227,12 @@
 
 
 /*
- * gsens_int configuration
- *
- */
-
-#define ALT_MODULE_CLASS_gsens_int altera_avalon_pio
-#define GSENS_INT_BASE 0x4041030
-#define GSENS_INT_BIT_CLEARING_EDGE_REGISTER 0
-#define GSENS_INT_BIT_MODIFYING_OUTPUT_REGISTER 0
-#define GSENS_INT_CAPTURE 1
-#define GSENS_INT_DATA_WIDTH 2
-#define GSENS_INT_DO_TEST_BENCH_WIRING 0
-#define GSENS_INT_DRIVEN_SIM_VALUE 0
-#define GSENS_INT_EDGE_TYPE "RISING"
-#define GSENS_INT_FREQ 50000000
-#define GSENS_INT_HAS_IN 1
-#define GSENS_INT_HAS_OUT 0
-#define GSENS_INT_HAS_TRI 0
-#define GSENS_INT_IRQ 4
-#define GSENS_INT_IRQ_INTERRUPT_CONTROLLER_ID 0
-#define GSENS_INT_IRQ_TYPE "EDGE"
-#define GSENS_INT_NAME "/dev/gsens_int"
-#define GSENS_INT_RESET_VALUE 0
-#define GSENS_INT_SPAN 16
-#define GSENS_INT_TYPE "altera_avalon_pio"
-
-
-/*
  * hal configuration
  *
  */
 
 #define ALT_INCLUDE_INSTRUCTION_RELATED_EXCEPTION_API
-#define ALT_MAX_FD 32
+#define ALT_MAX_FD 4
 #define ALT_SYS_CLK none
 #define ALT_TIMESTAMP_CLK none
 
@@ -256,7 +243,7 @@
  */
 
 #define ALT_MODULE_CLASS_hex20 altera_avalon_pio
-#define HEX20_BASE 0x4041080
+#define HEX20_BASE 0x4001070
 #define HEX20_BIT_CLEARING_EDGE_REGISTER 0
 #define HEX20_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define HEX20_CAPTURE 0
@@ -283,7 +270,7 @@
  */
 
 #define ALT_MODULE_CLASS_hex53 altera_avalon_pio
-#define HEX53_BASE 0x4041070
+#define HEX53_BASE 0x4001060
 #define HEX53_BIT_CLEARING_EDGE_REGISTER 0
 #define HEX53_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define HEX53_CAPTURE 0
@@ -310,7 +297,7 @@
  */
 
 #define ALT_MODULE_CLASS_img_addy altera_avalon_pio
-#define IMG_ADDY_BASE 0x4041040
+#define IMG_ADDY_BASE 0x4001010
 #define IMG_ADDY_BIT_CLEARING_EDGE_REGISTER 0
 #define IMG_ADDY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define IMG_ADDY_CAPTURE 0
@@ -337,7 +324,7 @@
  */
 
 #define ALT_MODULE_CLASS_jtag_uart_0 altera_avalon_jtag_uart
-#define JTAG_UART_0_BASE 0x40410c0
+#define JTAG_UART_0_BASE 0x4001040
 #define JTAG_UART_0_IRQ 0
 #define JTAG_UART_0_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define JTAG_UART_0_NAME "/dev/jtag_uart_0"
@@ -355,7 +342,7 @@
  */
 
 #define ALT_MODULE_CLASS_key altera_avalon_pio
-#define KEY_BASE 0x4041090
+#define KEY_BASE 0x4001080
 #define KEY_BIT_CLEARING_EDGE_REGISTER 0
 #define KEY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define KEY_CAPTURE 0
@@ -382,7 +369,7 @@
  */
 
 #define ALT_MODULE_CLASS_ledr altera_avalon_pio
-#define LEDR_BASE 0x40410b0
+#define LEDR_BASE 0x40010a0
 #define LEDR_BIT_CLEARING_EDGE_REGISTER 0
 #define LEDR_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define LEDR_CAPTURE 0
@@ -404,12 +391,30 @@
 
 
 /*
+ * mutex_0 configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_mutex_0 altera_avalon_mutex
+#define MUTEX_0_BASE 0x4001048
+#define MUTEX_0_IRQ -1
+#define MUTEX_0_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define MUTEX_0_NAME "/dev/mutex_0"
+#define MUTEX_0_OWNER_INIT 0
+#define MUTEX_0_OWNER_WIDTH 16
+#define MUTEX_0_SPAN 8
+#define MUTEX_0_TYPE "altera_avalon_mutex"
+#define MUTEX_0_VALUE_INIT 0
+#define MUTEX_0_VALUE_WIDTH 16
+
+
+/*
  * pixel_dat configuration
  *
  */
 
 #define ALT_MODULE_CLASS_pixel_dat altera_avalon_pio
-#define PIXEL_DAT_BASE 0x4041060
+#define PIXEL_DAT_BASE 0x4001050
 #define PIXEL_DAT_BIT_CLEARING_EDGE_REGISTER 0
 #define PIXEL_DAT_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define PIXEL_DAT_CAPTURE 0
@@ -428,35 +433,6 @@
 #define PIXEL_DAT_RESET_VALUE 0
 #define PIXEL_DAT_SPAN 16
 #define PIXEL_DAT_TYPE "altera_avalon_pio"
-
-
-/*
- * ram configuration
- *
- */
-
-#define ALT_MODULE_CLASS_ram altera_avalon_onchip_memory2
-#define RAM_ALLOW_IN_SYSTEM_MEMORY_CONTENT_EDITOR 0
-#define RAM_ALLOW_MRAM_SIM_CONTENTS_ONLY_FILE 0
-#define RAM_BASE 0x4020000
-#define RAM_CONTENTS_INFO ""
-#define RAM_DUAL_PORT 0
-#define RAM_GUI_RAM_BLOCK_TYPE "AUTO"
-#define RAM_INIT_CONTENTS_FILE "NiosSystem_ram"
-#define RAM_INIT_MEM_CONTENT 0
-#define RAM_INSTANCE_ID "NONE"
-#define RAM_IRQ -1
-#define RAM_IRQ_INTERRUPT_CONTROLLER_ID -1
-#define RAM_NAME "/dev/ram"
-#define RAM_NON_DEFAULT_INIT_FILE_ENABLED 0
-#define RAM_RAM_BLOCK_TYPE "AUTO"
-#define RAM_READ_DURING_WRITE_MODE "DONT_CARE"
-#define RAM_SINGLE_CLOCK_OP 0
-#define RAM_SIZE_MULTIPLE 1
-#define RAM_SIZE_VALUE 102400
-#define RAM_SPAN 102400
-#define RAM_TYPE "altera_avalon_onchip_memory2"
-#define RAM_WRITABLE 1
 
 
 /*
@@ -499,43 +475,12 @@
 
 
 /*
- * spi_0 configuration
- *
- */
-
-#define ALT_MODULE_CLASS_spi_0 altera_avalon_spi
-#define SPI_0_BASE 0x4041000
-#define SPI_0_CLOCKMULT 1
-#define SPI_0_CLOCKPHASE 1
-#define SPI_0_CLOCKPOLARITY 1
-#define SPI_0_CLOCKUNITS "Hz"
-#define SPI_0_DATABITS 8
-#define SPI_0_DATAWIDTH 16
-#define SPI_0_DELAYMULT "1.0E-9"
-#define SPI_0_DELAYUNITS "ns"
-#define SPI_0_EXTRADELAY 0
-#define SPI_0_INSERT_SYNC 0
-#define SPI_0_IRQ 3
-#define SPI_0_IRQ_INTERRUPT_CONTROLLER_ID 0
-#define SPI_0_ISMASTER 1
-#define SPI_0_LSBFIRST 0
-#define SPI_0_NAME "/dev/spi_0"
-#define SPI_0_NUMSLAVES 2
-#define SPI_0_PREFIX "spi_"
-#define SPI_0_SPAN 32
-#define SPI_0_SYNC_REG_DEPTH 2
-#define SPI_0_TARGETCLOCK 5000000u
-#define SPI_0_TARGETSSDELAY "0.0"
-#define SPI_0_TYPE "altera_avalon_spi"
-
-
-/*
  * sw configuration
  *
  */
 
 #define ALT_MODULE_CLASS_sw altera_avalon_pio
-#define SW_BASE 0x40410a0
+#define SW_BASE 0x4001090
 #define SW_BIT_CLEARING_EDGE_REGISTER 0
 #define SW_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define SW_CAPTURE 0
@@ -562,7 +507,7 @@
  */
 
 #define ALT_MODULE_CLASS_usec_counter altera_avalon_pio
-#define USEC_COUNTER_BASE 0x4041020
+#define USEC_COUNTER_BASE 0x4001000
 #define USEC_COUNTER_BIT_CLEARING_EDGE_REGISTER 0
 #define USEC_COUNTER_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define USEC_COUNTER_CAPTURE 0

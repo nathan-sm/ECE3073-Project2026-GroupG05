@@ -1,10 +1,10 @@
 /*
  * linker.x - Linker script
  *
- * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Fri May 08 21:59:06 EST 2026
+ * Generated: Sun May 10 02:01:10 EST 2026
  */
 
 /*
@@ -50,14 +50,13 @@
 
 MEMORY
 {
-    sdram_control : ORIGIN = 0x0, LENGTH = 67108864
-    reset : ORIGIN = 0x4020000, LENGTH = 32
-    ram : ORIGIN = 0x4020020, LENGTH = 102368
+    sdram_control_BEFORE_RESET : ORIGIN = 0x0, LENGTH = 65536
+    reset : ORIGIN = 0x10000, LENGTH = 32
+    sdram_control : ORIGIN = 0x10020, LENGTH = 131072
 }
 
 /* Define symbols for each memory base-address */
 __alt_mem_sdram_control = 0x0;
-__alt_mem_ram = 0x4020000;
 
 OUTPUT_FORMAT( "elf32-littlenios2",
                "elf32-littlenios2",
@@ -86,14 +85,7 @@ SECTIONS
         KEEP (*(.entry))
     } > reset
 
-    /*
-     *
-     * This section's LMA is set to the .text region.
-     * crt0 will copy to this section's specified mapped region virtual memory address (VMA)
-     *
-     */
-
-    .exceptions 0x4020020 : AT ( 0x4020020 )
+    .exceptions :
     {
         PROVIDE (__ram_exceptions_start = ABSOLUTE(.));
         . = ALIGN(0x20);
@@ -120,18 +112,11 @@ SECTIONS
         KEEP (*(.exceptions.exit));
         KEEP (*(.exceptions));
         PROVIDE (__ram_exceptions_end = ABSOLUTE(.));
-    } > ram
+    } > sdram_control
 
     PROVIDE (__flash_exceptions_start = LOADADDR(.exceptions));
 
-    /*
-     *
-     * This section's LMA is set to the .text region.
-     * crt0 will copy to this section's specified mapped region virtual memory address (VMA)
-     *
-     */
-
-    .text LOADADDR (.exceptions) + SIZEOF (.exceptions) : AT ( LOADADDR (.exceptions) + SIZEOF (.exceptions) )
+    .text :
     {
         /*
          * All code sections are merged into the text output section, along with
@@ -223,7 +208,7 @@ SECTIONS
         PROVIDE (__DTOR_END__ = ABSOLUTE(.));
         KEEP (*(.jcr))
         . = ALIGN(4);
-    } > ram = 0x3a880100 /* NOP instruction (always in big-endian byte ordering) */
+    } > sdram_control = 0x3a880100 /* NOP instruction (always in big-endian byte ordering) */
 
     .rodata :
     {
@@ -242,9 +227,13 @@ SECTIONS
      * This section's LMA is set to the .text region.
      * crt0 will copy to this section's specified mapped region virtual memory address (VMA)
      *
+     * .rwdata region equals the .text region, and is set to be loaded into .text region.
+     * This requires two copies of .rwdata in the .text region. One read writable at VMA.
+     * and one read-only at LMA. crt0 will copy from LMA to VMA on reset
+     *
      */
 
-    .rwdata : AT ( LOADADDR (.text) + SIZEOF (.text) )
+    .rwdata LOADADDR (.rodata) + SIZEOF (.rodata) : AT ( LOADADDR (.rodata) + SIZEOF (.rodata)+ SIZEOF (.rwdata) )
     {
         PROVIDE (__ram_rwdata_start = ABSOLUTE(.));
         . = ALIGN(4);
@@ -267,7 +256,14 @@ SECTIONS
 
     PROVIDE (__flash_rwdata_start = LOADADDR(.rwdata));
 
-    .bss :
+    /*
+     *
+     * This section's LMA is set to the .text region.
+     * crt0 will copy to this section's specified mapped region virtual memory address (VMA)
+     *
+     */
+
+    .bss LOADADDR (.rwdata) + SIZEOF (.rwdata) : AT ( LOADADDR (.rwdata) + SIZEOF (.rwdata) )
     {
         __bss_start = ABSOLUTE(.);
         PROVIDE (__sbss_start = ABSOLUTE(.));
@@ -312,7 +308,7 @@ SECTIONS
      *
      */
 
-    .sdram_control : AT ( LOADADDR (.rwdata) + SIZEOF (.rwdata) )
+    .sdram_control LOADADDR (.bss) + SIZEOF (.bss) : AT ( LOADADDR (.bss) + SIZEOF (.bss) )
     {
         PROVIDE (_alt_partition_sdram_control_start = ABSOLUTE(.));
         *(.sdram_control .sdram_control. sdram_control.*)
@@ -324,23 +320,6 @@ SECTIONS
     } > sdram_control
 
     PROVIDE (_alt_partition_sdram_control_load_addr = LOADADDR(.sdram_control));
-
-    /*
-     *
-     * This section's LMA is set to the .text region.
-     * crt0 will copy to this section's specified mapped region virtual memory address (VMA)
-     *
-     */
-
-    .ram LOADADDR (.sdram_control) + SIZEOF (.sdram_control) : AT ( LOADADDR (.sdram_control) + SIZEOF (.sdram_control) )
-    {
-        PROVIDE (_alt_partition_ram_start = ABSOLUTE(.));
-        *(.ram .ram. ram.*)
-        . = ALIGN(4);
-        PROVIDE (_alt_partition_ram_end = ABSOLUTE(.));
-    } > ram
-
-    PROVIDE (_alt_partition_ram_load_addr = LOADADDR(.ram));
 
     /*
      * Stabs debugging sections.
@@ -389,7 +368,7 @@ SECTIONS
 /*
  * Don't override this, override the __alt_stack_* symbols instead.
  */
-__alt_data_end = 0x4000000;
+__alt_data_end = 0x30020;
 
 /*
  * The next two symbols define the location of the default stack.  You can
@@ -405,4 +384,4 @@ PROVIDE( __alt_stack_limit   = __alt_stack_base );
  * Override this symbol to put the heap in a different memory.
  */
 PROVIDE( __alt_heap_start    = end );
-PROVIDE( __alt_heap_limit    = 0x4000000 );
+PROVIDE( __alt_heap_limit    = 0x30020 );

@@ -9,6 +9,7 @@
 		.ledr_export         (<connected-to-ledr_export>),         //          ledr.export
 		.pixel_dat_export    (<connected-to-pixel_dat_export>),    //     pixel_dat.export
 		.reset_reset_n       (<connected-to-reset_reset_n>),       //         reset.reset_n
+		.sdram_clk_clk       (<connected-to-sdram_clk_clk>),       //     sdram_clk.clk
 		.sdram_control_addr  (<connected-to-sdram_control_addr>),  // sdram_control.addr
 		.sdram_control_ba    (<connected-to-sdram_control_ba>),    //              .ba
 		.sdram_control_cas_n (<connected-to-sdram_control_cas_n>), //              .cas_n
