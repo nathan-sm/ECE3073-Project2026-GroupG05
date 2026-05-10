@@ -3,6 +3,7 @@
 	<name>communications</name>
 	<comment></comment>
 	<projects>
+		<project>communications_bsp</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

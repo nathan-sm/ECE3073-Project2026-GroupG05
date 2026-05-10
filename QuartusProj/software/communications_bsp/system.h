@@ -4,7 +4,7 @@
  * Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Sun May 10 02:42:46 EST 2026
+ * Generated: Mon May 11 02:39:06 EST 2026
  */
 
 /*
@@ -165,18 +165,24 @@
 #define ALT_NUM_EXTERNAL_INTERRUPT_CONTROLLERS 0
 #define ALT_NUM_INTERNAL_INTERRUPT_CONTROLLERS 1
 #define ALT_NUM_INTERRUPT_CONTROLLERS 1
-#define ALT_STDERR "/dev/null"
-#define ALT_STDERR_BASE 0x0
-#define ALT_STDERR_DEV null
-#define ALT_STDERR_TYPE ""
-#define ALT_STDIN "/dev/null"
-#define ALT_STDIN_BASE 0x0
-#define ALT_STDIN_DEV null
-#define ALT_STDIN_TYPE ""
-#define ALT_STDOUT "/dev/null"
-#define ALT_STDOUT_BASE 0x0
-#define ALT_STDOUT_DEV null
-#define ALT_STDOUT_TYPE ""
+#define ALT_STDERR "/dev/jtag_uart_1"
+#define ALT_STDERR_BASE 0x4001060
+#define ALT_STDERR_DEV jtag_uart_1
+#define ALT_STDERR_IS_JTAG_UART
+#define ALT_STDERR_PRESENT
+#define ALT_STDERR_TYPE "altera_avalon_jtag_uart"
+#define ALT_STDIN "/dev/jtag_uart_1"
+#define ALT_STDIN_BASE 0x4001060
+#define ALT_STDIN_DEV jtag_uart_1
+#define ALT_STDIN_IS_JTAG_UART
+#define ALT_STDIN_PRESENT
+#define ALT_STDIN_TYPE "altera_avalon_jtag_uart"
+#define ALT_STDOUT "/dev/jtag_uart_1"
+#define ALT_STDOUT_BASE 0x4001060
+#define ALT_STDOUT_DEV jtag_uart_1
+#define ALT_STDOUT_IS_JTAG_UART
+#define ALT_STDOUT_PRESENT
+#define ALT_STDOUT_TYPE "altera_avalon_jtag_uart"
 #define ALT_SYSTEM_NAME "NiosSystem"
 
 
@@ -185,7 +191,7 @@
  *
  */
 
-#define ALTPLL_0_BASE 0x4001030
+#define ALTPLL_0_BASE 0x4001040
 #define ALTPLL_0_IRQ -1
 #define ALTPLL_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define ALTPLL_0_NAME "/dev/altpll_0"
@@ -195,12 +201,39 @@
 
 
 /*
+ * cam_redy configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_cam_redy altera_avalon_pio
+#define CAM_REDY_BASE 0x4001020
+#define CAM_REDY_BIT_CLEARING_EDGE_REGISTER 0
+#define CAM_REDY_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define CAM_REDY_CAPTURE 0
+#define CAM_REDY_DATA_WIDTH 1
+#define CAM_REDY_DO_TEST_BENCH_WIRING 0
+#define CAM_REDY_DRIVEN_SIM_VALUE 0
+#define CAM_REDY_EDGE_TYPE "NONE"
+#define CAM_REDY_FREQ 50000000
+#define CAM_REDY_HAS_IN 1
+#define CAM_REDY_HAS_OUT 0
+#define CAM_REDY_HAS_TRI 0
+#define CAM_REDY_IRQ -1
+#define CAM_REDY_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define CAM_REDY_IRQ_TYPE "NONE"
+#define CAM_REDY_NAME "/dev/cam_redy"
+#define CAM_REDY_RESET_VALUE 0
+#define CAM_REDY_SPAN 16
+#define CAM_REDY_TYPE "altera_avalon_pio"
+
+
+/*
  * gsens_int configuration
  *
  */
 
 #define ALT_MODULE_CLASS_gsens_int altera_avalon_pio
-#define GSENS_INT_BASE 0x4001020
+#define GSENS_INT_BASE 0x4001030
 #define GSENS_INT_BIT_CLEARING_EDGE_REGISTER 0
 #define GSENS_INT_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define GSENS_INT_CAPTURE 1
@@ -238,7 +271,7 @@
  */
 
 #define ALT_MODULE_CLASS_jtag_uart_1 altera_avalon_jtag_uart
-#define JTAG_UART_1_BASE 0x4001040
+#define JTAG_UART_1_BASE 0x4001060
 #define JTAG_UART_1_IRQ 2
 #define JTAG_UART_1_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define JTAG_UART_1_NAME "/dev/jtag_uart_1"
@@ -256,7 +289,7 @@
  */
 
 #define ALT_MODULE_CLASS_mutex_0 altera_avalon_mutex
-#define MUTEX_0_BASE 0x4001048
+#define MUTEX_0_BASE 0x4001058
 #define MUTEX_0_IRQ -1
 #define MUTEX_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define MUTEX_0_NAME "/dev/mutex_0"

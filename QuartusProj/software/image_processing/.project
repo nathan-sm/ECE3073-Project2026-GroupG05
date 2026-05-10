@@ -3,6 +3,7 @@
 	<name>image_processing</name>
 	<comment></comment>
 	<projects>
+		<project>image_processing_bsp</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

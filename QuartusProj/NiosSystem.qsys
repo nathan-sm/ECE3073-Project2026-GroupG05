@@ -93,7 +93,7 @@
    {
       datum baseAddress
       {
-         value = "67113040";
+         value = "67113056";
          type = "String";
       }
    }
@@ -157,7 +157,7 @@
    {
       datum baseAddress
       {
-         value = "67113104";
+         value = "67113040";
          type = "String";
       }
    }
@@ -173,7 +173,7 @@
    {
       datum baseAddress
       {
-         value = "67113040";
+         value = "67113056";
          type = "String";
       }
    }
@@ -189,7 +189,7 @@
    {
       datum baseAddress
       {
-         value = "67113056";
+         value = "67113072";
          type = "String";
       }
    }
@@ -205,7 +205,23 @@
    {
       datum baseAddress
       {
-         value = "67113088";
+         value = "67113104";
+         type = "String";
+      }
+   }
+   element mutex_0
+   {
+      datum _sortIndex
+      {
+         value = "18";
+         type = "int";
+      }
+   }
+   element mutex_0.s1
+   {
+      datum baseAddress
+      {
+         value = "67113048";
          type = "String";
       }
    }
@@ -274,7 +290,7 @@
    {
       datum baseAddress
       {
-         value = "67113072";
+         value = "67113088";
          type = "String";
       }
    }
@@ -577,7 +593,7 @@
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='comms.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='spi_0.spi_control_port' start='0x4001000' end='0x4001020' type='altera_avalon_spi.spi_control_port' /><slave name='cam_redy.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='gsens_int.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001040' end='0x4001050' type='altpll.pll_slave' /><slave name='jtag_uart_1.avalon_jtag_slave' start='0x4001050' end='0x4001058' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='comms.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='spi_0.spi_control_port' start='0x4001000' end='0x4001020' type='altera_avalon_spi.spi_control_port' /><slave name='cam_redy.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='gsens_int.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001040' end='0x4001050' type='altpll.pll_slave' /><slave name='mutex_0.s1' start='0x4001058' end='0x4001060' type='altera_avalon_mutex.s1' /><slave name='jtag_uart_1.avalon_jtag_slave' start='0x4001060' end='0x4001068' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -616,7 +632,7 @@
   <parameter name="icache_tagramBlockType" value="Automatic" />
   <parameter name="impl" value="Fast" />
   <parameter name="instAddrWidth" value="27" />
-  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='comms.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /></address-map>]]></parameter>
+  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='comms.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mutex_0.s1' start='0x4001058' end='0x4001060' type='altera_avalon_mutex.s1' /></address-map>]]></parameter>
   <parameter name="instructionMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="instructionMasterHighPerformanceMapParam" value="" />
   <parameter name="instruction_master_high_performance_paddr_base" value="0" />
@@ -797,7 +813,7 @@
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='image_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='usec_counter.s1' start='0x4001000' end='0x4001010' type='altera_avalon_pio.s1' /><slave name='img_addy.s1' start='0x4001010' end='0x4001020' type='altera_avalon_pio.s1' /><slave name='pixel_dat.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001040' end='0x4001050' type='altpll.pll_slave' /><slave name='hex20.s1' start='0x4001050' end='0x4001060' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x4001060' end='0x4001070' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001070' end='0x4001080' type='altera_avalon_pio.s1' /><slave name='ledr.s1' start='0x4001080' end='0x4001090' type='altera_avalon_pio.s1' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x4001090' end='0x4001098' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='image_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='usec_counter.s1' start='0x4001000' end='0x4001010' type='altera_avalon_pio.s1' /><slave name='img_addy.s1' start='0x4001010' end='0x4001020' type='altera_avalon_pio.s1' /><slave name='pixel_dat.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001040' end='0x4001050' type='altpll.pll_slave' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x4001050' end='0x4001058' type='altera_avalon_jtag_uart.avalon_jtag_slave' /><slave name='mutex_0.s1' start='0x4001058' end='0x4001060' type='altera_avalon_mutex.s1' /><slave name='hex20.s1' start='0x4001060' end='0x4001070' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x4001070' end='0x4001080' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001080' end='0x4001090' type='altera_avalon_pio.s1' /><slave name='ledr.s1' start='0x4001090' end='0x40010A0' type='altera_avalon_pio.s1' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -836,7 +852,7 @@
   <parameter name="icache_tagramBlockType" value="Automatic" />
   <parameter name="impl" value="Fast" />
   <parameter name="instAddrWidth" value="27" />
-  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='image_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /></address-map>]]></parameter>
+  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='image_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mutex_0.s1' start='0x4001058' end='0x4001060' type='altera_avalon_mutex.s1' /></address-map>]]></parameter>
   <parameter name="instructionMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="instructionMasterHighPerformanceMapParam" value="" />
   <parameter name="instruction_master_high_performance_paddr_base" value="0" />
@@ -1035,6 +1051,10 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="10" />
  </module>
+ <module name="mutex_0" kind="altera_avalon_mutex" version="18.1" enabled="1">
+  <parameter name="initialOwner" value="0" />
+  <parameter name="initialValue" value="0" />
+ </module>
  <module name="pixel_dat" kind="altera_avalon_pio" version="18.1" enabled="1">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
@@ -1132,7 +1152,7 @@
    start="image_proc.data_master"
    end="jtag_uart_0.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001090" />
+  <parameter name="baseAddress" value="0x04001050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1141,7 +1161,7 @@
    start="comms.data_master"
    end="jtag_uart_1.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001050" />
+  <parameter name="baseAddress" value="0x04001060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1195,7 +1215,7 @@
    start="image_proc.data_master"
    end="ledr.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001080" />
+  <parameter name="baseAddress" value="0x04001090" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1204,7 +1224,7 @@
    start="image_proc.data_master"
    end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001070" />
+  <parameter name="baseAddress" value="0x04001080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1213,7 +1233,7 @@
    start="image_proc.data_master"
    end="key.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001060" />
+  <parameter name="baseAddress" value="0x04001070" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1222,7 +1242,7 @@
    start="image_proc.data_master"
    end="hex20.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001050" />
+  <parameter name="baseAddress" value="0x04001060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1291,6 +1311,24 @@
  <connection
    kind="avalon"
    version="18.1"
+   start="image_proc.data_master"
+   end="mutex_0.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04001058" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="comms.data_master"
+   end="mutex_0.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04001058" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
    start="comms.data_master"
    end="spi_0.spi_control_port">
   <parameter name="arbitrationPriority" value="1" />
@@ -1333,6 +1371,24 @@
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="image_proc.instruction_master"
+   end="mutex_0.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04001058" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="comms.instruction_master"
+   end="mutex_0.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04001058" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
  <connection kind="clock" version="18.1" start="clk_0.clk" end="image_proc.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="ledr.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="key.clk" />
@@ -1349,6 +1405,7 @@
  <connection kind="clock" version="18.1" start="clk_0.clk" end="usec_counter.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="comms.clk" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="jtag_uart_1.clk" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="mutex_0.clk" />
  <connection
    kind="clock"
    version="18.1"
@@ -1437,6 +1494,11 @@
    version="18.1"
    start="clk_0.clk_reset"
    end="jtag_uart_1.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="mutex_0.reset" />
  <connection
    kind="reset"
    version="18.1"
