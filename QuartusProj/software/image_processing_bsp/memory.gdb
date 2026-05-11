@@ -3,7 +3,7 @@
 # Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
 # SOPC Builder design path: ../../NiosSystem.sopcinfo
 #
-# Generated: Mon May 11 15:05:10 EST 2026
+# Generated: Mon May 11 20:17:33 EST 2026
 
 # DO NOT MODIFY THIS FILE
 #

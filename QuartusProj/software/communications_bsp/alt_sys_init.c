@@ -4,7 +4,7 @@
  * Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 17:34:04 EST 2026
+ * Generated: Mon May 11 20:17:29 EST 2026
  */
 
 /*
@@ -61,7 +61,6 @@
 #include "altera_nios2_gen2_irq.h"
 #include "altera_avalon_jtag_uart.h"
 #include "altera_avalon_mailbox_simple.h"
-#include "altera_avalon_mutex.h"
 #include "altera_avalon_spi.h"
 
 /*
@@ -72,7 +71,6 @@ ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( COMMS, comms);
 ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART_1, jtag_uart_1);
 ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( ACK_MAILBOX, ack_mailbox);
 ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DATA_MAILBOX, data_mailbox);
-ALTERA_AVALON_MUTEX_INSTANCE ( MUTEX_0, mutex_0);
 ALTERA_AVALON_SPI_INSTANCE ( SPI_0, spi_0);
 
 /*
@@ -99,6 +97,5 @@ void alt_sys_init( void )
     ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART_1, jtag_uart_1);
     ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( ACK_MAILBOX, ack_mailbox);
     ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DATA_MAILBOX, data_mailbox);
-    ALTERA_AVALON_MUTEX_INIT ( MUTEX_0, mutex_0);
     ALTERA_AVALON_SPI_INIT ( SPI_0, spi_0);
 }

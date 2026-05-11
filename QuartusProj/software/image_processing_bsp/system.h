@@ -4,7 +4,7 @@
  * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 17:34:04 EST 2026
+ * Generated: Mon May 11 20:17:33 EST 2026
  */
 
 /*
@@ -143,7 +143,6 @@
 
 #define __ALTERA_AVALON_JTAG_UART
 #define __ALTERA_AVALON_MAILBOX_SIMPLE
-#define __ALTERA_AVALON_MUTEX
 #define __ALTERA_AVALON_NEW_SDRAM_CONTROLLER
 #define __ALTERA_AVALON_PIO
 #define __ALTERA_NIOS2_GEN2
@@ -390,24 +389,6 @@
 #define LEDR_RESET_VALUE 0
 #define LEDR_SPAN 16
 #define LEDR_TYPE "altera_avalon_pio"
-
-
-/*
- * mutex_0 configuration
- *
- */
-
-#define ALT_MODULE_CLASS_mutex_0 altera_avalon_mutex
-#define MUTEX_0_BASE 0x4001070
-#define MUTEX_0_IRQ -1
-#define MUTEX_0_IRQ_INTERRUPT_CONTROLLER_ID -1
-#define MUTEX_0_NAME "/dev/mutex_0"
-#define MUTEX_0_OWNER_INIT 0
-#define MUTEX_0_OWNER_WIDTH 16
-#define MUTEX_0_SPAN 8
-#define MUTEX_0_TYPE "altera_avalon_mutex"
-#define MUTEX_0_VALUE_INIT 0
-#define MUTEX_0_VALUE_WIDTH 16
 
 
 /*

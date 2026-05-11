@@ -4,7 +4,7 @@
  * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 17:34:04 EST 2026
+ * Generated: Mon May 11 20:17:33 EST 2026
  */
 
 /*
@@ -61,7 +61,6 @@
 #include "altera_nios2_gen2_irq.h"
 #include "altera_avalon_jtag_uart.h"
 #include "altera_avalon_mailbox_simple.h"
-#include "altera_avalon_mutex.h"
 
 /*
  * Allocate the device storage
@@ -71,7 +70,6 @@ ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( IMAGE_PROC, image_proc);
 ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART_0, jtag_uart_0);
 ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( ACK_MAILBOX, ack_mailbox);
 ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DATA_MAILBOX, data_mailbox);
-ALTERA_AVALON_MUTEX_INSTANCE ( MUTEX_0, mutex_0);
 
 /*
  * Initialize the interrupt controller devices
@@ -97,5 +95,4 @@ void alt_sys_init( void )
     ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART_0, jtag_uart_0);
     ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( ACK_MAILBOX, ack_mailbox);
     ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DATA_MAILBOX, data_mailbox);
-    ALTERA_AVALON_MUTEX_INIT ( MUTEX_0, mutex_0);
 }
