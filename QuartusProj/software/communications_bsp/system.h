@@ -4,7 +4,7 @@
  * Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 02:39:06 EST 2026
+ * Generated: Mon May 11 17:34:04 EST 2026
  */
 
 /*
@@ -73,7 +73,7 @@
 #define ALT_CPU_DCACHE_LINE_SIZE 32
 #define ALT_CPU_DCACHE_LINE_SIZE_LOG2 5
 #define ALT_CPU_DCACHE_SIZE 2048
-#define ALT_CPU_EXCEPTION_ADDR 0x00010020
+#define ALT_CPU_EXCEPTION_ADDR 0x00800020
 #define ALT_CPU_FLASH_ACCELERATOR_LINES 0
 #define ALT_CPU_FLASH_ACCELERATOR_LINE_SIZE 0
 #define ALT_CPU_FLUSHDA_SUPPORTED
@@ -94,7 +94,7 @@
 #define ALT_CPU_NAME "comms"
 #define ALT_CPU_NUM_OF_SHADOW_REG_SETS 0
 #define ALT_CPU_OCI_VERSION 1
-#define ALT_CPU_RESET_ADDR 0x00010000
+#define ALT_CPU_RESET_ADDR 0x00800000
 
 
 /*
@@ -114,7 +114,7 @@
 #define NIOS2_DCACHE_LINE_SIZE 32
 #define NIOS2_DCACHE_LINE_SIZE_LOG2 5
 #define NIOS2_DCACHE_SIZE 2048
-#define NIOS2_EXCEPTION_ADDR 0x00010020
+#define NIOS2_EXCEPTION_ADDR 0x00800020
 #define NIOS2_FLASH_ACCELERATOR_LINES 0
 #define NIOS2_FLASH_ACCELERATOR_LINE_SIZE 0
 #define NIOS2_FLUSHDA_SUPPORTED
@@ -133,7 +133,7 @@
 #define NIOS2_INST_ADDR_WIDTH 0x1b
 #define NIOS2_NUM_OF_SHADOW_REG_SETS 0
 #define NIOS2_OCI_VERSION 1
-#define NIOS2_RESET_ADDR 0x00010000
+#define NIOS2_RESET_ADDR 0x00800000
 
 
 /*
@@ -142,6 +142,7 @@
  */
 
 #define __ALTERA_AVALON_JTAG_UART
+#define __ALTERA_AVALON_MAILBOX_SIMPLE
 #define __ALTERA_AVALON_MUTEX
 #define __ALTERA_AVALON_NEW_SDRAM_CONTROLLER
 #define __ALTERA_AVALON_PIO
@@ -166,19 +167,19 @@
 #define ALT_NUM_INTERNAL_INTERRUPT_CONTROLLERS 1
 #define ALT_NUM_INTERRUPT_CONTROLLERS 1
 #define ALT_STDERR "/dev/jtag_uart_1"
-#define ALT_STDERR_BASE 0x4001060
+#define ALT_STDERR_BASE 0x4001078
 #define ALT_STDERR_DEV jtag_uart_1
 #define ALT_STDERR_IS_JTAG_UART
 #define ALT_STDERR_PRESENT
 #define ALT_STDERR_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDIN "/dev/jtag_uart_1"
-#define ALT_STDIN_BASE 0x4001060
+#define ALT_STDIN_BASE 0x4001078
 #define ALT_STDIN_DEV jtag_uart_1
 #define ALT_STDIN_IS_JTAG_UART
 #define ALT_STDIN_PRESENT
 #define ALT_STDIN_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDOUT "/dev/jtag_uart_1"
-#define ALT_STDOUT_BASE 0x4001060
+#define ALT_STDOUT_BASE 0x4001078
 #define ALT_STDOUT_DEV jtag_uart_1
 #define ALT_STDOUT_IS_JTAG_UART
 #define ALT_STDOUT_PRESENT
@@ -187,11 +188,25 @@
 
 
 /*
+ * ack_mailbox configuration
+ *
+ */
+
+#define ACK_MAILBOX_BASE 0x4001020
+#define ACK_MAILBOX_IRQ 3
+#define ACK_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID 0
+#define ACK_MAILBOX_NAME "/dev/ack_mailbox"
+#define ACK_MAILBOX_SPAN 16
+#define ACK_MAILBOX_TYPE "altera_avalon_mailbox_simple"
+#define ALT_MODULE_CLASS_ack_mailbox altera_avalon_mailbox_simple
+
+
+/*
  * altpll_0 configuration
  *
  */
 
-#define ALTPLL_0_BASE 0x4001040
+#define ALTPLL_0_BASE 0x4001050
 #define ALTPLL_0_IRQ -1
 #define ALTPLL_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define ALTPLL_0_NAME "/dev/altpll_0"
@@ -206,7 +221,7 @@
  */
 
 #define ALT_MODULE_CLASS_cam_redy altera_avalon_pio
-#define CAM_REDY_BASE 0x4001020
+#define CAM_REDY_BASE 0x4001030
 #define CAM_REDY_BIT_CLEARING_EDGE_REGISTER 0
 #define CAM_REDY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define CAM_REDY_CAPTURE 0
@@ -228,12 +243,26 @@
 
 
 /*
+ * data_mailbox configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_data_mailbox altera_avalon_mailbox_simple
+#define DATA_MAILBOX_BASE 0x4001060
+#define DATA_MAILBOX_IRQ -1
+#define DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define DATA_MAILBOX_NAME "/dev/data_mailbox"
+#define DATA_MAILBOX_SPAN 16
+#define DATA_MAILBOX_TYPE "altera_avalon_mailbox_simple"
+
+
+/*
  * gsens_int configuration
  *
  */
 
 #define ALT_MODULE_CLASS_gsens_int altera_avalon_pio
-#define GSENS_INT_BASE 0x4001030
+#define GSENS_INT_BASE 0x4001040
 #define GSENS_INT_BIT_CLEARING_EDGE_REGISTER 0
 #define GSENS_INT_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define GSENS_INT_CAPTURE 1
@@ -271,7 +300,7 @@
  */
 
 #define ALT_MODULE_CLASS_jtag_uart_1 altera_avalon_jtag_uart
-#define JTAG_UART_1_BASE 0x4001060
+#define JTAG_UART_1_BASE 0x4001078
 #define JTAG_UART_1_IRQ 2
 #define JTAG_UART_1_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define JTAG_UART_1_NAME "/dev/jtag_uart_1"
@@ -289,7 +318,7 @@
  */
 
 #define ALT_MODULE_CLASS_mutex_0 altera_avalon_mutex
-#define MUTEX_0_BASE 0x4001058
+#define MUTEX_0_BASE 0x4001070
 #define MUTEX_0_IRQ -1
 #define MUTEX_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define MUTEX_0_NAME "/dev/mutex_0"

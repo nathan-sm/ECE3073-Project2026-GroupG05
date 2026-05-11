@@ -4,7 +4,7 @@
  * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 02:42:03 EST 2026
+ * Generated: Mon May 11 15:05:10 EST 2026
  */
 
 /*
@@ -68,7 +68,7 @@
 #define RESET_REGION_BASE 0x0
 #define RESET_REGION_SPAN 32
 #define SDRAM_CONTROL_REGION_BASE 0x20
-#define SDRAM_CONTROL_REGION_SPAN 65504
+#define SDRAM_CONTROL_REGION_SPAN 8388576
 
 
 /*

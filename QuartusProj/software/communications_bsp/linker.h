@@ -4,7 +4,7 @@
  * Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 02:45:45 EST 2026
+ * Generated: Mon May 11 15:06:45 EST 2026
  */
 
 /*
@@ -65,12 +65,12 @@
  *
  */
 
-#define RESET_REGION_BASE 0x10000
+#define RESET_REGION_BASE 0x800000
 #define RESET_REGION_SPAN 32
 #define SDRAM_CONTROL_BEFORE_RESET_REGION_BASE 0x0
-#define SDRAM_CONTROL_BEFORE_RESET_REGION_SPAN 65536
-#define SDRAM_CONTROL_REGION_BASE 0x10020
-#define SDRAM_CONTROL_REGION_SPAN 131072
+#define SDRAM_CONTROL_BEFORE_RESET_REGION_SPAN 8388608
+#define SDRAM_CONTROL_REGION_BASE 0x800020
+#define SDRAM_CONTROL_REGION_SPAN 8388576
 
 
 /*

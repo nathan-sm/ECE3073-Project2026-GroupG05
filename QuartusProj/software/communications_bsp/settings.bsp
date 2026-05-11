@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 11, 2026 2:45:44 AM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778431544821</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>11/05/2026 6:05:09 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778486709320</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\Users\ritwa\Documents\GitHub\ECE3073_G05\QuartusProj\software\communications_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>..\..\NiosSystem.sopcinfo</SopcDesignFile>
@@ -902,25 +902,25 @@
                 <regionName>sdram_control_BEFORE_RESET</regionName>
                 <memoryName>sdram_control</memoryName>
                 <offset>0</offset>
-                <size>65536</size>
+                <size>8388608</size>
                 <baseAddress>0x0</baseAddress>
-                <addressRange>0x00000000 - 0x0000FFFF</addressRange>
+                <addressRange>0x00000000 - 0x007FFFFF</addressRange>
         </LinkerRegion>
         <LinkerRegion>
                 <regionName>reset</regionName>
                 <memoryName>sdram_control</memoryName>
-                <offset>65536</offset>
+                <offset>8388608</offset>
                 <size>32</size>
-                <baseAddress>0x10000</baseAddress>
-                <addressRange>0x00010000 - 0x0001001F</addressRange>
+                <baseAddress>0x800000</baseAddress>
+                <addressRange>0x00800000 - 0x0080001F</addressRange>
         </LinkerRegion>
         <LinkerRegion>
                 <regionName>sdram_control</regionName>
                 <memoryName>sdram_control</memoryName>
-                <offset>65568</offset>
-                <size>131072</size>
-                <baseAddress>0x10020</baseAddress>
-                <addressRange>0x00010020 - 0x0003001F</addressRange>
+                <offset>8388640</offset>
+                <size>8388576</size>
+                <baseAddress>0x800020</baseAddress>
+                <addressRange>0x00800020 - 0x00FFFFFF</addressRange>
         </LinkerRegion>
         <MemoryMap>
                 <slaveDescriptor>sdram_control</slaveDescriptor>
@@ -935,32 +935,44 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>cam_redy</slaveDescriptor>
+                <slaveDescriptor>ack_mailbox</slaveDescriptor>
                 <addressRange>0x04001020 - 0x0400102F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <slaveDescriptor>cam_redy</slaveDescriptor>
                 <addressRange>0x04001030 - 0x0400103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <slaveDescriptor>gsens_int</slaveDescriptor>
                 <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
+                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <addressRange>0x04001050 - 0x0400105F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>data_mailbox</slaveDescriptor>
+                <addressRange>0x04001060 - 0x0400106F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
                 <slaveDescriptor>mutex_0</slaveDescriptor>
-                <addressRange>0x04001058 - 0x0400105F</addressRange>
+                <addressRange>0x04001070 - 0x04001077</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>jtag_uart_1</slaveDescriptor>
-                <addressRange>0x04001060 - 0x04001067</addressRange>
+                <addressRange>0x04001078 - 0x0400107F</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>

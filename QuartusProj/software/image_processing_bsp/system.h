@@ -4,7 +4,7 @@
  * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Mon May 11 02:19:49 EST 2026
+ * Generated: Mon May 11 17:34:04 EST 2026
  */
 
 /*
@@ -142,6 +142,7 @@
  */
 
 #define __ALTERA_AVALON_JTAG_UART
+#define __ALTERA_AVALON_MAILBOX_SIMPLE
 #define __ALTERA_AVALON_MUTEX
 #define __ALTERA_AVALON_NEW_SDRAM_CONTROLLER
 #define __ALTERA_AVALON_PIO
@@ -165,19 +166,19 @@
 #define ALT_NUM_INTERNAL_INTERRUPT_CONTROLLERS 1
 #define ALT_NUM_INTERRUPT_CONTROLLERS 1
 #define ALT_STDERR "/dev/jtag_uart_0"
-#define ALT_STDERR_BASE 0x4001050
+#define ALT_STDERR_BASE 0x4001078
 #define ALT_STDERR_DEV jtag_uart_0
 #define ALT_STDERR_IS_JTAG_UART
 #define ALT_STDERR_PRESENT
 #define ALT_STDERR_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDIN "/dev/jtag_uart_0"
-#define ALT_STDIN_BASE 0x4001050
+#define ALT_STDIN_BASE 0x4001078
 #define ALT_STDIN_DEV jtag_uart_0
 #define ALT_STDIN_IS_JTAG_UART
 #define ALT_STDIN_PRESENT
 #define ALT_STDIN_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDOUT "/dev/jtag_uart_0"
-#define ALT_STDOUT_BASE 0x4001050
+#define ALT_STDOUT_BASE 0x4001078
 #define ALT_STDOUT_DEV jtag_uart_0
 #define ALT_STDOUT_IS_JTAG_UART
 #define ALT_STDOUT_PRESENT
@@ -186,17 +187,45 @@
 
 
 /*
+ * ack_mailbox configuration
+ *
+ */
+
+#define ACK_MAILBOX_BASE 0x4001000
+#define ACK_MAILBOX_IRQ -1
+#define ACK_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define ACK_MAILBOX_NAME "/dev/ack_mailbox"
+#define ACK_MAILBOX_SPAN 16
+#define ACK_MAILBOX_TYPE "altera_avalon_mailbox_simple"
+#define ALT_MODULE_CLASS_ack_mailbox altera_avalon_mailbox_simple
+
+
+/*
  * altpll_0 configuration
  *
  */
 
-#define ALTPLL_0_BASE 0x4001040
+#define ALTPLL_0_BASE 0x4001050
 #define ALTPLL_0_IRQ -1
 #define ALTPLL_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define ALTPLL_0_NAME "/dev/altpll_0"
 #define ALTPLL_0_SPAN 16
 #define ALTPLL_0_TYPE "altpll"
 #define ALT_MODULE_CLASS_altpll_0 altpll
+
+
+/*
+ * data_mailbox configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_data_mailbox altera_avalon_mailbox_simple
+#define DATA_MAILBOX_BASE 0x40010b0
+#define DATA_MAILBOX_IRQ 3
+#define DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID 0
+#define DATA_MAILBOX_NAME "/dev/data_mailbox"
+#define DATA_MAILBOX_SPAN 16
+#define DATA_MAILBOX_TYPE "altera_avalon_mailbox_simple"
 
 
 /*
@@ -243,7 +272,7 @@
  */
 
 #define ALT_MODULE_CLASS_hex53 altera_avalon_pio
-#define HEX53_BASE 0x4001030
+#define HEX53_BASE 0x4001040
 #define HEX53_BIT_CLEARING_EDGE_REGISTER 0
 #define HEX53_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define HEX53_CAPTURE 0
@@ -270,7 +299,7 @@
  */
 
 #define ALT_MODULE_CLASS_img_addy altera_avalon_pio
-#define IMG_ADDY_BASE 0x4001010
+#define IMG_ADDY_BASE 0x4001020
 #define IMG_ADDY_BIT_CLEARING_EDGE_REGISTER 0
 #define IMG_ADDY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define IMG_ADDY_CAPTURE 0
@@ -297,7 +326,7 @@
  */
 
 #define ALT_MODULE_CLASS_jtag_uart_0 altera_avalon_jtag_uart
-#define JTAG_UART_0_BASE 0x4001050
+#define JTAG_UART_0_BASE 0x4001078
 #define JTAG_UART_0_IRQ 0
 #define JTAG_UART_0_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define JTAG_UART_0_NAME "/dev/jtag_uart_0"
@@ -315,7 +344,7 @@
  */
 
 #define ALT_MODULE_CLASS_key altera_avalon_pio
-#define KEY_BASE 0x4001070
+#define KEY_BASE 0x4001080
 #define KEY_BIT_CLEARING_EDGE_REGISTER 0
 #define KEY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define KEY_CAPTURE 0
@@ -342,7 +371,7 @@
  */
 
 #define ALT_MODULE_CLASS_ledr altera_avalon_pio
-#define LEDR_BASE 0x4001090
+#define LEDR_BASE 0x40010a0
 #define LEDR_BIT_CLEARING_EDGE_REGISTER 0
 #define LEDR_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define LEDR_CAPTURE 0
@@ -369,7 +398,7 @@
  */
 
 #define ALT_MODULE_CLASS_mutex_0 altera_avalon_mutex
-#define MUTEX_0_BASE 0x4001058
+#define MUTEX_0_BASE 0x4001070
 #define MUTEX_0_IRQ -1
 #define MUTEX_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define MUTEX_0_NAME "/dev/mutex_0"
@@ -387,7 +416,7 @@
  */
 
 #define ALT_MODULE_CLASS_pixel_dat altera_avalon_pio
-#define PIXEL_DAT_BASE 0x4001020
+#define PIXEL_DAT_BASE 0x4001030
 #define PIXEL_DAT_BIT_CLEARING_EDGE_REGISTER 0
 #define PIXEL_DAT_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define PIXEL_DAT_CAPTURE 0
@@ -453,7 +482,7 @@
  */
 
 #define ALT_MODULE_CLASS_sw altera_avalon_pio
-#define SW_BASE 0x4001080
+#define SW_BASE 0x4001090
 #define SW_BIT_CLEARING_EDGE_REGISTER 0
 #define SW_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define SW_CAPTURE 0
@@ -480,7 +509,7 @@
  */
 
 #define ALT_MODULE_CLASS_usec_counter altera_avalon_pio
-#define USEC_COUNTER_BASE 0x4001000
+#define USEC_COUNTER_BASE 0x4001010
 #define USEC_COUNTER_BIT_CLEARING_EDGE_REGISTER 0
 #define USEC_COUNTER_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define USEC_COUNTER_CAPTURE 0
