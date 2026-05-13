@@ -2,6 +2,7 @@
 #include "system.h"
 #include "io.h"
 #include "sys/alt_irq.h"
+#include <stdlib.h>
 
 #define SHARED_MEM_BASE (SDRAM_CONTROL_BASE + 0x01000000)
 #define IMAGE_SIZE 76800
@@ -56,6 +57,104 @@ void display_fps(uint32_t elapsed) {
     IOWR(HEX53_BASE, 0, hex3_5);
 }
 
+// task 2.2 functions
+
+void convolve(uint8_t *inputImage, uint8_t *outputImage, int *kernel, int width, int height) {
+	// iterate through every row and column skipping the borders
+	for (int i = 1; i < height - 1; i++) {
+		for (int j = 1; j < width - 1; j++) {
+			// get the weighted pixel sum and kernel weight (normalisation)
+			int sum = 0;
+			int total_weight = 0;
+
+			// looping over 3x3 neighbourhood around pixel (i,j)
+			for (int ki = -1; ki <= 1; ki++) {
+				for (int kj = -1; kj <= 1; kj++) {
+						// get neighbouring pixel value
+						int pixel = inputImage[(i + ki) * width + (j + kj)];
+						// get matching kern3l weight (stored in row-major:index
+						int weight = kernel[(ki + 1) * 3 + (kj + 1)];
+						sum += pixel * weight;
+						total_weight += weight;
+					}
+				}
+				// avoid dividing by zero if kernel weights = 0
+				if (total_weight == 0)total_weight = 1;
+				// normalise
+				int result = sum / total_weight;
+				// restrict result to valid pixel range [0, 255]
+				if (result < 0) result = 0;
+				if (result > 255) result = 255;
+				// write the result to the output buffer
+				outputImage[i * width + j] = (uint8_t)result;
+			}
+		}
+		// border pixels zero, skipped by convolution loop, setting to them to black
+		// top, bottom, left , right
+		for (int x = 0; x < width; x++) outputImage[x] = 0;
+		for (int x = 0; x < width; x++) outputImage[(height-1)*width + x] = 0;
+		for (int y = 0; y < height; y++) outputImage[y*width] = 0;
+		for (int y = 0; y < height; y++) outputImage[y*width + (width - 1)] = 0;
+
+}
+
+void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
+	// 3x3 box kernel : all values = 1
+	// convolve will divide by total_weight =9, giving average
+	int blur_kernel[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+	// run a pass of convolution with box kernel
+	convolve(input, output, blur_kernel, width, height);
+}
+
+void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height) {
+	// detecting vertical (Gx) abd horizontal (Gy) edges (gradient in each direction)
+	int kernel_x[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
+	int kernel_y[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+
+	// pixels with magnitude below this value are set to black
+	// increase fewer, stronger edges - decrease for more, weaker edges
+	int threshold = 60;
+
+	for (int i = 1; i < height - 1; i++) {
+		for (int j = 1; j < width -1; j++) {
+
+			// horizontal and vertical gradient at pixel
+			int gx = 0;
+			int gy = 0;
+
+			// compute gx and gy at the same time looping over 3x3
+			for (int ki = -1; ki <= 1; ki++) {
+				for (int kj = -1; kj <= 1; kj++) {
+					int pixel = input[(i + ki) * width + (j + kj)];
+					gx += pixel * kernel_x[(ki+1)*3 + (kj+1)];
+					gy += pixel * kernel_y[(ki+1)*3 + (kj+1)];
+
+				}
+			}
+			// combine gradients use magnitude values of gx and gy
+			int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
+
+			// restrict magnitude to 255
+			if (magnitude > 255) magnitude = 255;
+
+			// apply threshold, keep pixel if strong, otherwise black
+			output[i * width + j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
+
+
+
+		}
+	}
+
+	// zero border pixels
+	for (int x = 0; x < width; x++) output[x] = 0;
+	for (int x = 0; x < width; x++) output[(height -1)*width + x] = 0;
+	for (int y = 0; y < height; y++) output[y*width] = 0;
+	for (int y = 0; y < height; y++) output[y*width + (width-1)] = 0;
+
+}
+
+
 int main() {
     int currently_displaying = -1;
     uint32_t last_frame_time = 0;
@@ -91,6 +190,15 @@ int main() {
             }
 
             currently_displaying = current_frame_index;
+
+            // task 2.2 implement
+            if (currently_displaying == 1) {
+            	box_blur(buffers[0], buffers[1], 320, 240);
+            }
+
+            if (currently_displaying == 2) {
+            	sobel_edge_detection(buffers[0], buffers[2], 320, 240);
+            }
 
             // Shared accel data, for quad image display.
             int16_t x_val = shared_accel->x;
