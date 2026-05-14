@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include "system.h"
@@ -11,9 +12,13 @@
 #define ACCEL_SS        1       // spi_ss_n[1]
 
 // Image Parameters
-#define IMAGE_WIDTH     320
-#define IMAGE_HEIGHT    240
-#define IMAGE_SIZE      (IMAGE_WIDTH * IMAGE_HEIGHT)    // 76,800 pixels
+#define FULL_IMAGE_WIDTH     320
+#define FULL_IMAGE_HEIGHT    240
+#define FULL_IMAGE_SIZE      (FULL_IMAGE_WIDTH * FULL_IMAGE_HEIGHT)    // 76,800 pixels
+#define QUAD_IMAGE_WIDTH	(FULL_IMAGE_WIDTH/2)
+#define QUAD_IMAGE_HEIGHT	(FULL_IMAGE_HEIGHT/2)
+#define QUAD_IMAGE_SIZE		(QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
+#define QUAD_IMAGE_BUF_SIZE (QUAD_IMAGE_SIZE * 4)
 
 // ESP-CAM Command Byte
 // Bit 0: 0 = Greyscale,   1 = 4-bit RGB
@@ -21,12 +26,22 @@
 // Bit 2: 0 = Raw stream,  1 = Packed stream
 // Bit 3: 0 = Flash off,   1 = Flash on
 // Bit 4: 0 = No change,   1 = Apply settings (must be set for bits 0-3 to register)
-#define CAM_CMD_DEFAULT 0x10    // Greyscale
+#define CAM_GREY_MASK 0x1
+#define CAM_QUAD_MASK 0x2
+#define CAM_PACK_MASK 0x4
+#define CAM_FLASH_MASK 0x8
+#define CAM_WRITE_MASK 0x10;
+#define CAM_CMD_DEFAULT 0x0    // Greyscale
+uint8_t g_camLastConfig = 0x0;
 
 // Global buffer placed in SDRAM
-uint8_t image_buffer[IMAGE_SIZE];
+uint8_t full_image_buffer[FULL_IMAGE_SIZE];
+uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
 
-// ---- TASK 4: FPS display ----
+/** Display an FPS value on the 7-segment displays
+ *
+ * @param elapsed Time taken for the frame, in ms.
+ */
 void display_fps(uint32_t elapsed) {
 	// Stores 100 x FPS so that we can do integer division
     uint32_t fps_100 = 100000000 / elapsed;
@@ -63,37 +78,111 @@ void display_fps(uint32_t elapsed) {
     IOWR(HEX53_BASE, 0, hex3_5);
 }
 
-// Send command byte then receive a full 320x240 frame into the pixel buffer
-void receive_frame(uint8_t cmd)
+/** Write a frame from the SPI-CAM to SDRAM
+ *
+ * 	@param isQuad Boolean value for whether to receive a quarter size frame
+ */
+void receive_frame(bool isQuad)
 {
-    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0); // TASK 4: start timer
+	uint8_t camCmd = g_camLastConfig;
+	uint8_t camFlag = isQuad ? CAM_QUAD_MASK : 0x0;
+	if ((g_camLastConfig & CAM_QUAD_MASK) != camFlag)
+	{
+		if (isQuad)
+		{
+			camCmd |= CAM_QUAD_MASK;
+		}
+		else
+		{
+			camCmd &= ~CAM_QUAD_MASK;
+		}
 
+		g_camLastConfig = camCmd;
+
+		camCmd |= CAM_WRITE_MASK;
+	}
+
+	uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : FULL_IMAGE_SIZE;
+	uint8_t *readDest = isQuad ? quad_image_buffer : full_image_buffer;
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
-                           1, &cmd,
-                           IMAGE_SIZE, image_buffer,
+                           1, &camCmd,
+                           readSize, readDest,
                            0);
+}
 
+/** Display the full image currently in the full_image_buffer.
+ *
+ * @returns Time taken to transfer image, in ms.
+ */
+uint32_t display_full_image()
+{
+	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
-    for (uint32_t i = 0; i < IMAGE_SIZE; i++) {
-        IOWR(PIXEL_DAT_BASE, 0, image_buffer[i] >> 4);
+    for (uint32_t i = 0; i < FULL_IMAGE_SIZE; i++) {
+        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
         IOWR(IMG_ADDY_BASE,  0, i);
     }
 
-//    for (uint32_t i = 0; i < 0xfffff; i++);
+    return IORD(USEC_COUNTER_BASE, 0) - t_start;
+}
 
-    display_fps(IORD(USEC_COUNTER_BASE, 0) - t_start); // TASK 4: display FPS
+/** Display the four images currently contained in the quad_image_buffer.
+ *
+ * @returns Time taken to transfer images, in ms.
+ */
+uint32_t display_quad_image()
+{
+    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
+
+    for (uint32_t imageIndex = 0; imageIndex < 4; imageIndex++)
+    {
+    	uint32_t imgStartAddr = imageIndex * QUAD_IMAGE_SIZE;
+    	uint32_t pixelBufferStartAddr = 0;
+
+    	if (imageIndex & 0x1)
+    	{
+    		pixelBufferStartAddr += QUAD_IMAGE_WIDTH;
+    	}
+
+    	if (imageIndex & 0x2)
+    	{
+    		pixelBufferStartAddr += QUAD_IMAGE_SIZE * 2;
+    	}
+
+		for (uint32_t i = 0; i < QUAD_IMAGE_SIZE; i++) {
+			uint32_t imageAddr = imgStartAddr + i;
+			uint32_t line = i / QUAD_IMAGE_WIDTH;
+			uint32_t col = i % QUAD_IMAGE_WIDTH;
+			uint32_t pixelBufferAddr = pixelBufferStartAddr + (line * FULL_IMAGE_WIDTH) + col;
+
+			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imageAddr] >> 4);
+			IOWR(IMG_ADDY_BASE,  0, pixelBufferAddr);
+		}
+    }
+
+    return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
 int main(void) {
     printf("ESP-CAM SPI initialised\n");
 
     // Send startup command to put camera into a known state
-    uint8_t startup_cmd = CAM_CMD_DEFAULT;
+    uint8_t startup_cmd = CAM_CMD_DEFAULT | CAM_WRITE_MASK;
 
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
 
+    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
+    {
+    	full_image_buffer[i] = 0x00;
+    }
+
+    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
+    {
+    	quad_image_buffer[i] = 0xff;
+    }
+  
     if (accel_setup())
     {
     	printf("Gyro init failed.\n");
@@ -104,8 +193,23 @@ int main(void) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
         if (IORD(CAM_REDY_BASE, 0) == 1)
         {
+        	uint16_t swStatus = IORD(SW_BASE, 0);
+        	bool isQuad = swStatus & 0x1;
+
 			// Fetch and display the frame
-			receive_frame(CAM_CMD_DEFAULT);
+			receive_frame(isQuad);
+
+			uint32_t frameWriteTime = 0;
+			if (isQuad)
+			{
+				frameWriteTime = display_quad_image(0, 0);
+			}
+			else
+			{
+				frameWriteTime = display_full_image();
+			}
+
+			display_fps(frameWriteTime);
         }
 
 //        printf("Frame written to pixel buffer\n");
