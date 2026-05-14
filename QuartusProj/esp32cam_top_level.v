@@ -56,13 +56,16 @@ module esp32cam_top_level (
     // Nios Exports
     wire [23:0] hex20_wire;
     wire [23:0] hex53_wire;
-    wire [3:0]  pixel_data_write;
-    wire [16:0] pixel_addr_write;
+	 
+    wire [11:0]  pixel_data_write;
+    
+	 wire [16:0] pixel_addr_write;
     wire [9:0]  ledr_wire;         // LEDR routed through wire for hardware test
     
     // VGA Controller to RAM interconnects
     wire [18:0] vga_read_address;
-    wire [3:0]  vga_read_data;
+    
+	 wire [11:0]  vga_read_data;
 	 
 	// SPI Bus
     wire        spi_pico;          // Controller Out, Peripheral In — shared to both devices
