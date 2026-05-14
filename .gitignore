@@ -122,6 +122,7 @@ software/*/.force_relink
 **/software/*/readme.txt
 **/software/*/drivers/**
 **/software/*/HAL/**
+**/software/*/**.a
 **/software/*_bsp/system.h
 
 .claude/

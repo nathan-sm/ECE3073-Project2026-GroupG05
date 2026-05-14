@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+
 #include "system.h"
 #include "io.h"
 #include "altera_avalon_spi.h"
@@ -12,9 +14,11 @@
 #define ACCEL_SS        1       // spi_ss_n[1]
 
 // Image Parameters
-#define FULL_IMAGE_WIDTH     320
-#define FULL_IMAGE_HEIGHT    240
-#define FULL_IMAGE_SIZE      (FULL_IMAGE_WIDTH * FULL_IMAGE_HEIGHT)    // 76,800 pixels
+#define DISPLAY_WIDTH		320
+#define DISPLAY_HEIGHT		240
+#define FULL_IMAGE_WIDTH    320
+#define FULL_IMAGE_HEIGHT   240
+#define FULL_IMAGE_SIZE     (FULL_IMAGE_WIDTH * FULL_IMAGE_HEIGHT)    // 76,800 pixels
 #define QUAD_IMAGE_WIDTH	(FULL_IMAGE_WIDTH/2)
 #define QUAD_IMAGE_HEIGHT	(FULL_IMAGE_HEIGHT/2)
 #define QUAD_IMAGE_SIZE		(QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
@@ -37,6 +41,12 @@ uint8_t g_camLastConfig = 0x0;
 // Global buffer placed in SDRAM
 uint8_t full_image_buffer[FULL_IMAGE_SIZE];
 uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
+
+// Array of which image to display in each position in quad display mode
+uint32_t g_quadDisplayIndices[4] = { 0, 1, 2, 3 };
+// Threshold for controlling quad display using the gyro
+#define GYRO_CONTROL_THRESH_SINGLE 60
+#define GYRO_CONTROL_THRESH_DOUBLE 90
 
 /** Display an FPS value on the 7-segment displays
  *
@@ -114,53 +124,79 @@ void receive_frame(bool isQuad)
  *
  * @returns Time taken to transfer image, in ms.
  */
-uint32_t display_full_image()
+void display_full_image()
 {
-	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
-
     for (uint32_t i = 0; i < FULL_IMAGE_SIZE; i++) {
-        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
         IOWR(IMG_ADDY_BASE,  0, i);
+        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
     }
-
-    return IORD(USEC_COUNTER_BASE, 0) - t_start;
 }
 
-/** Display the four images currently contained in the quad_image_buffer.
+/** Display one of the images in quad_display_buffer on the screen.
+ *
+ * @param imageIndex Which image to display
+ * @param displayIndex Where on the display to place the image (0 - top left, 1 - top right, 2 - bottom left, 3 - bottom right)
  *
  * @returns Time taken to transfer images, in ms.
  */
-uint32_t display_quad_image()
+void display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 {
-    unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
+	uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
+	uint32_t pixelBufferAddr = 0;
 
-    for (uint32_t imageIndex = 0; imageIndex < 4; imageIndex++)
-    {
-    	uint32_t imgStartAddr = imageIndex * QUAD_IMAGE_SIZE;
-    	uint32_t pixelBufferStartAddr = 0;
+	// If on the right, move destination over by half the display width
+	if (displayIndex & 0x1)
+	{
+		pixelBufferAddr += QUAD_IMAGE_WIDTH;
+	}
 
-    	if (imageIndex & 0x1)
-    	{
-    		pixelBufferStartAddr += QUAD_IMAGE_WIDTH;
-    	}
+	// If on the bottom, move destination down by half the display height
+	if (displayIndex & 0x2)
+	{
+		pixelBufferAddr += QUAD_IMAGE_SIZE * 2;
+	}
 
-    	if (imageIndex & 0x2)
-    	{
-    		pixelBufferStartAddr += QUAD_IMAGE_SIZE * 2;
-    	}
-
-		for (uint32_t i = 0; i < QUAD_IMAGE_SIZE; i++) {
-			uint32_t imageAddr = imgStartAddr + i;
-			uint32_t line = i / QUAD_IMAGE_WIDTH;
-			uint32_t col = i % QUAD_IMAGE_WIDTH;
-			uint32_t pixelBufferAddr = pixelBufferStartAddr + (line * FULL_IMAGE_WIDTH) + col;
-
-			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imageAddr] >> 4);
+	// Double loop over quad-size image, by lines then pixels
+	for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++)
+	{
+		for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++)
+		{
 			IOWR(IMG_ADDY_BASE,  0, pixelBufferAddr);
-		}
-    }
+			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imgAddr - 1] >> 4);
 
-    return IORD(USEC_COUNTER_BASE, 0) - t_start;
+			imgAddr++;
+			pixelBufferAddr++;
+		}
+
+		// At the end of each line, move the destination to the next line of the display
+		pixelBufferAddr += FULL_IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
+	}
+}
+
+// Controls quad-display mode by tilting and double-tapping the device
+void doubletap_callback()
+{
+	uint16_t swStatus = IORD(SW_BASE, 0);
+	bool isQuad = swStatus & 0x1;
+
+	if (!isQuad)
+		return;
+
+	DeviceRotation deviceRotation = accel_get_device_rotation();
+
+	if ((abs(deviceRotation.x_axis) < GYRO_CONTROL_THRESH_SINGLE
+			&& abs(deviceRotation.y_axis) < GYRO_CONTROL_THRESH_SINGLE)
+			|| abs(deviceRotation.x_axis) + abs(deviceRotation.y_axis) < GYRO_CONTROL_THRESH_DOUBLE)
+		return;
+
+	uint8_t imageX = deviceRotation.x_axis > 0 ? 0 : 1;
+	uint8_t imageY = deviceRotation.y_axis < 0 ? 0 : 1;
+
+	uint8_t imageIndex = (imageY << 1) | imageX;
+
+	g_quadDisplayIndices[imageIndex] = (g_quadDisplayIndices[imageIndex] + 1) % 4;
+
+	printf("Changed image display: [%lu, %lu, %lu, %lu]\n", g_quadDisplayIndices[0], g_quadDisplayIndices[1], g_quadDisplayIndices[2], g_quadDisplayIndices[3]);
 }
 
 int main(void) {
@@ -173,21 +209,25 @@ int main(void) {
                            1, &startup_cmd,
                            0, NULL, 0);
 
+    // Initialize full image buffer
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
     {
     	full_image_buffer[i] = 0x00;
     }
 
+    // Initialize quad image buffer
     for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
     {
-    	quad_image_buffer[i] = 0xff;
+    	quad_image_buffer[i] = 0x00;
     }
-  
+
     if (accel_setup())
     {
     	printf("Gyro init failed.\n");
     	return 1;
     }
+
+    gyro_set_dtap_callback(&doubletap_callback);
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
@@ -196,24 +236,32 @@ int main(void) {
         	uint16_t swStatus = IORD(SW_BASE, 0);
         	bool isQuad = swStatus & 0x1;
 
+        	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
+
 			// Fetch and display the frame
 			receive_frame(isQuad);
 
-			uint32_t frameWriteTime = 0;
 			if (isQuad)
 			{
-				frameWriteTime = display_quad_image(0, 0);
+				display_quad_image(g_quadDisplayIndices[0], 0);
+				display_quad_image(g_quadDisplayIndices[1], 1);
+				display_quad_image(g_quadDisplayIndices[2], 2);
+				display_quad_image(g_quadDisplayIndices[3], 3);
 			}
 			else
 			{
-				frameWriteTime = display_full_image();
+				display_full_image();
 			}
 
-			display_fps(frameWriteTime);
+
+		    uint32_t frameTime = IORD(USEC_COUNTER_BASE, 0) - t_start;
+
+			display_fps(frameTime);
         }
 
 //        printf("Frame written to pixel buffer\n");
 
+        if (accel_update())
         if (accel_update())
         {
         	printf("Gyro read failed\n");
