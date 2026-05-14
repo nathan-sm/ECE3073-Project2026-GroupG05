@@ -39,7 +39,9 @@
 #define Z_HB 0x37
 
 #define CONFIG_LENGTH 16 * 2 // number of config details to send to initialise gyro
+#define CONFIG_LENGTH 16 * 2 // number of config details to send to initialise gyro
 
+#define MAX_COUNT 10 // cycles to count to before printing
 #define MAX_COUNT 10 // cycles to count to before printing
 
 #define READ_X_AXIS 0xc0 | X_LB // enable read bit and multi byte
@@ -47,6 +49,7 @@
 #define READ_Z_AXIS 0xc0 | Z_LB // enable read bit and multi byte
 
 // define desired setup settings with write location then value to write
+alt_u8 gyro_config[CONFIG_LENGTH] = {
 alt_u8 gyro_config[CONFIG_LENGTH] = {
     DATA_FORMAT, 0x0b, // 4-wire SPI, full resolution, +/- 16g
     THRESH_ACT, 0x04,
@@ -94,6 +97,7 @@ static void gsens_isr(void* context)
 }
 
 int accel_setup()
+int accel_setup()
 {
     // clear pending edge captures
     IOWR_ALTERA_AVALON_PIO_EDGE_CAP(GSENS_INT_BASE, 0x1);
@@ -111,6 +115,7 @@ int accel_setup()
 
     // accel select slave 1 (second argument)
     for (int i = 0; i < CONFIG_LENGTH; i += 2) {
+    for (int i = 0; i < CONFIG_LENGTH; i += 2) {
     	alt_avalon_spi_command(SPI_0_BASE, 1, 2, gyro_config + i, 0, &gyro_data_out, 0);
     }
 
@@ -126,6 +131,7 @@ int accel_setup()
     return 0;
 }
 
+int accel_update()
 int accel_update()
 {
 	// detect if interrupt has fired
@@ -146,10 +152,27 @@ int accel_update()
 		}
 	}
 
+
 	// increment counter
 	g_print_counter++;
 	if (g_print_counter >= MAX_COUNT)
+	if (g_print_counter >= MAX_COUNT)
 	{
+		DeviceRotation rotation = accel_get_device_rotation();
+		accel_print_device_rotation("X axis: %4d\t Y axis: %4d\t Z axis %4d\n", &rotation);
+
+		g_print_counter = 0;
+	}
+
+	return 0;
+}
+
+DeviceRotation accel_get_device_rotation()
+{
+	DeviceRotation result;
+
+	// capture array for low and high byte from the SPI read
+	alt_u8 axis_data[6];
 		DeviceRotation rotation = accel_get_device_rotation();
 		accel_print_device_rotation("X axis: %4d\t Y axis: %4d\t Z axis %4d\n", &rotation);
 
@@ -168,11 +191,18 @@ DeviceRotation accel_get_device_rotation()
 
 	// enabling both read bit (bit 7) and multi-byte bit (bit 6) with 0xC0
 	alt_u8 read_cmd = 0xC0 | X_LB;
+	// enabling both read bit (bit 7) and multi-byte bit (bit 6) with 0xC0
+	alt_u8 read_cmd = 0xC0 | X_LB;
 
+	alt_avalon_spi_command(SPI_0_BASE, 1, 1, &read_cmd, 6, axis_data, 0);
 	alt_avalon_spi_command(SPI_0_BASE, 1, 1, &read_cmd, 6, axis_data, 0);
 
 	// 16 bit integers from 6 byte array, bit shifting
+	// 16 bit integers from 6 byte array, bit shifting
 
+	result.x_axis = (((int16_t)(axis_data[1]) << 8) | axis_data[0]);
+	result.y_axis = (((int16_t)(axis_data[3]) << 8) | axis_data[2]);
+	result.z_axis = (((int16_t)(axis_data[5]) << 8) | axis_data[4]);
 	result.x_axis = (((int16_t)(axis_data[1]) << 8) | axis_data[0]);
 	result.y_axis = (((int16_t)(axis_data[3]) << 8) | axis_data[2]);
 	result.z_axis = (((int16_t)(axis_data[5]) << 8) | axis_data[4]);

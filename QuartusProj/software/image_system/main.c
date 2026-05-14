@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -24,6 +25,15 @@
 #define QUAD_IMAGE_HEIGHT	(FULL_IMAGE_HEIGHT/2)
 #define QUAD_IMAGE_SIZE		(QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
 #define QUAD_IMAGE_BUF_SIZE (QUAD_IMAGE_SIZE * 4)
+#define DISPLAY_WIDTH		320
+#define DISPLAY_HEIGHT		240
+#define FULL_IMAGE_WIDTH    320
+#define FULL_IMAGE_HEIGHT   240
+#define FULL_IMAGE_SIZE     (FULL_IMAGE_WIDTH * FULL_IMAGE_HEIGHT)    // 76,800 pixels
+#define QUAD_IMAGE_WIDTH	(FULL_IMAGE_WIDTH/2)
+#define QUAD_IMAGE_HEIGHT	(FULL_IMAGE_HEIGHT/2)
+#define QUAD_IMAGE_SIZE		(QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
+#define QUAD_IMAGE_BUF_SIZE (QUAD_IMAGE_SIZE * 4)
 
 // ESP-CAM Command Byte
 // Bit 0: 0 = Greyscale,   1 = 4-bit RGB
@@ -31,6 +41,13 @@
 // Bit 2: 0 = Raw stream,  1 = Packed stream
 // Bit 3: 0 = Flash off,   1 = Flash on
 // Bit 4: 0 = No change,   1 = Apply settings (must be set for bits 0-3 to register)
+#define CAM_GREY_MASK 0x1
+#define CAM_QUAD_MASK 0x2
+#define CAM_PACK_MASK 0x4
+#define CAM_FLASH_MASK 0x8
+#define CAM_WRITE_MASK 0x10;
+#define CAM_CMD_DEFAULT 0x0    // Greyscale
+uint8_t g_camLastConfig = 0x0;
 #define CAM_GREY_MASK 0x1
 #define CAM_QUAD_MASK 0x2
 #define CAM_PACK_MASK 0x4
@@ -143,7 +160,35 @@ void receive_frame(bool isQuad)
 
 	uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : FULL_IMAGE_SIZE;
 	uint8_t *readDest = isQuad ? quad_image_buffer : full_image_buffer;
+/** Write a frame from the SPI-CAM to SDRAM
+ *
+ * 	@param isQuad Boolean value for whether to receive a quarter size frame
+ */
+void receive_frame(bool isQuad)
+{
+	uint8_t camCmd = g_camLastConfig;
+	uint8_t camFlag = isQuad ? CAM_QUAD_MASK : 0x0;
+	if ((g_camLastConfig & CAM_QUAD_MASK) != camFlag)
+	{
+		if (isQuad)
+		{
+			camCmd |= CAM_QUAD_MASK;
+		}
+		else
+		{
+			camCmd &= ~CAM_QUAD_MASK;
+		}
+
+		g_camLastConfig = camCmd;
+
+		camCmd |= CAM_WRITE_MASK;
+	}
+
+	uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : FULL_IMAGE_SIZE;
+	uint8_t *readDest = isQuad ? quad_image_buffer : full_image_buffer;
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
+                           1, &camCmd,
+                           readSize, readDest,
                            1, &camCmd,
                            readSize, readDest,
                            0);
@@ -241,10 +286,23 @@ int main(void) {
 
     // Send startup command to put camera into a known state
     uint8_t startup_cmd = CAM_CMD_DEFAULT | CAM_WRITE_MASK;
+    uint8_t startup_cmd = CAM_CMD_DEFAULT | CAM_WRITE_MASK;
 
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
+
+    // Initialize full image buffer
+    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
+    {
+    	full_image_buffer[i] = 0x00;
+    }
+
+    // Initialize quad image buffer
+    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
+    {
+    	quad_image_buffer[i] = 0x00;
+    }
 
     // Initialize full image buffer
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
@@ -263,6 +321,8 @@ int main(void) {
     	printf("Gyro init failed.\n");
     	return 1;
     }
+
+    gyro_set_dtap_callback(&doubletap_callback);
 
     gyro_set_dtap_callback(&doubletap_callback);
 
@@ -324,6 +384,7 @@ int main(void) {
 
 //        printf("Frame written to pixel buffer\n");
 
+        if (accel_update())
         if (accel_update())
         {
         	printf("Gyro read failed\n");

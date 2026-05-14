@@ -985,6 +985,7 @@
         <LinkerSection>
                 <sectionName>.text</sectionName>
                 <regionName>ram</regionName>
+                <regionName>ram</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.rodata</sectionName>
