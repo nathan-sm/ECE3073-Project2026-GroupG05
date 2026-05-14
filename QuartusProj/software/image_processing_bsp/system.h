@@ -4,7 +4,7 @@
  * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Thu May 14 15:05:27 EST 2026
+ * Generated: Fri May 15 03:56:42 EST 2026
  */
 
 /*
@@ -401,7 +401,7 @@
 #define PIXEL_DAT_BIT_CLEARING_EDGE_REGISTER 0
 #define PIXEL_DAT_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define PIXEL_DAT_CAPTURE 0
-#define PIXEL_DAT_DATA_WIDTH 4
+#define PIXEL_DAT_DATA_WIDTH 12
 #define PIXEL_DAT_DO_TEST_BENCH_WIRING 0
 #define PIXEL_DAT_DRIVEN_SIM_VALUE 0
 #define PIXEL_DAT_EDGE_TYPE "NONE"
