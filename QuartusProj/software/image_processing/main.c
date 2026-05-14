@@ -1,10 +1,23 @@
 #include <stdint.h>
+#include <string.h>
 #include "system.h"
 #include "io.h"
 #include "sys/alt_irq.h"
+#include <stdlib.h>
 
 #define SHARED_MEM_BASE (SDRAM_CONTROL_BASE + 0x01000000)
 #define IMAGE_SIZE 76800
+#define QUAD_IMAGE_WIDTH  160
+#define QUAD_IMAGE_HEIGHT 120
+#define QUAD_IMAGE_SIZE   19200
+#define FULL_IMAGE_WIDTH  320
+#define FULL_IMAGE_HEIGHT 240
+
+// Processing modes (selected by SW[2:1])
+#define PROC_RAW   0
+#define PROC_FLIP  1
+#define PROC_BLUR  2
+#define PROC_EDGE  3
 
 uint8_t* buffers[3] = {
     (uint8_t*)(SHARED_MEM_BASE),
@@ -18,7 +31,17 @@ typedef struct {
     int16_t z;
 } SharedAccelData;
 
+typedef struct {
+    volatile uint8_t isQuad;
+    volatile uint8_t _pad[3];
+    volatile uint32_t quadDisplayIndices[4];
+} SharedDisplayState;
+
 SharedAccelData* shared_accel = (SharedAccelData*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE)) | 0x80000000);
+SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
+
+// Processing output buffer — avoids writing into shared triple buffers
+uint8_t processing_buffer[IMAGE_SIZE];
 
 volatile int new_frame_ready = 0;
 volatile uint32_t current_frame_index = 0;
@@ -56,6 +79,158 @@ void display_fps(uint32_t elapsed) {
     IOWR(HEX53_BASE, 0, hex3_5);
 }
 
+// ---- Image Processing Functions ----
+
+void process_flip(uint8_t *input, uint8_t *output, int width, int height, int bpp)
+{
+    int totalPixels = width * height;
+    for (int i = 0; i < totalPixels; i++) {
+        int srcIdx = (totalPixels - 1 - i) * bpp;
+        int dstIdx = i * bpp;
+        for (int b = 0; b < bpp; b++) {
+            output[dstIdx + b] = input[srcIdx + b];
+        }
+    }
+}
+
+void convolve(uint8_t *inputImage, uint8_t *outputImage, int *kernel, int width, int height) {
+	// iterate through every row and column skipping the borders
+	for (int i = 1; i < height - 1; i++) {
+		for (int j = 1; j < width - 1; j++) {
+			// get the weighted pixel sum and kernel weight (normalisation)
+			int sum = 0;
+			int total_weight = 0;
+
+			// looping over 3x3 neighbourhood around pixel (i,j)
+			for (int ki = -1; ki <= 1; ki++) {
+				for (int kj = -1; kj <= 1; kj++) {
+					// get neighbouring pixel value
+					int pixel = inputImage[(i + ki) * width + (j + kj)];
+					// get matching kernel weight (stored in row-major index)
+					int weight = kernel[(ki + 1) * 3 + (kj + 1)];
+					sum += pixel * weight;
+					total_weight += weight;
+				}
+			}
+			// avoid dividing by zero if kernel weights = 0
+			if (total_weight == 0) total_weight = 1;
+			// normalise
+			int result = sum / total_weight;
+			// restrict result to valid pixel range [0, 255]
+			if (result < 0) result = 0;
+			if (result > 255) result = 255;
+			// write the result to the output buffer
+			outputImage[i * width + j] = (uint8_t)result;
+		}
+	}
+	// border pixels zero, skipped by convolution loop, setting them to black
+	for (int x = 0; x < width; x++) outputImage[x] = 0;
+	for (int x = 0; x < width; x++) outputImage[(height-1)*width + x] = 0;
+	for (int y = 0; y < height; y++) outputImage[y*width] = 0;
+	for (int y = 0; y < height; y++) outputImage[y*width + (width - 1)] = 0;
+}
+
+void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
+	// 3x3 box kernel : all values = 1
+	// convolve will divide by total_weight = 9, giving average
+	int blur_kernel[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+	// run a pass of convolution with box kernel
+	convolve(input, output, blur_kernel, width, height);
+}
+
+void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height) {
+	// detecting vertical (Gx) and horizontal (Gy) edges
+	int kernel_x[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
+	int kernel_y[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+
+	int threshold = 60;
+
+	for (int i = 1; i < height - 1; i++) {
+		for (int j = 1; j < width -1; j++) {
+
+			int gx = 0;
+			int gy = 0;
+
+			for (int ki = -1; ki <= 1; ki++) {
+				for (int kj = -1; kj <= 1; kj++) {
+					int pixel = input[(i + ki) * width + (j + kj)];
+					gx += pixel * kernel_x[(ki+1)*3 + (kj+1)];
+					gy += pixel * kernel_y[(ki+1)*3 + (kj+1)];
+				}
+			}
+
+			int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
+			if (magnitude > 255) magnitude = 255;
+			output[i * width + j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
+		}
+	}
+
+	// zero border pixels
+	for (int x = 0; x < width; x++) output[x] = 0;
+	for (int x = 0; x < width; x++) output[(height -1)*width + x] = 0;
+	for (int y = 0; y < height; y++) output[y*width] = 0;
+	for (int y = 0; y < height; y++) output[y*width + (width-1)] = 0;
+}
+
+// ---- Display Functions ----
+
+// Write a full image to pixel buffer using optimized 32-bit reads
+void display_full_image(uint8_t *buffer)
+{
+    volatile int* const pixel_dat_ptr = (volatile int*)(PIXEL_DAT_BASE | 0x80000000);
+    volatile int* const img_addy_ptr  = (volatile int*)(IMG_ADDY_BASE  | 0x80000000);
+
+    uint32_t* src_ptr32 = (uint32_t*)((uint32_t)buffer | 0x80000000);
+    uint32_t* const src_end32 = (uint32_t*)(((uint32_t)buffer + IMAGE_SIZE) | 0x80000000);
+
+    int addr = 0;
+
+    while (src_ptr32 < src_end32) {
+        uint32_t block = *src_ptr32++;
+
+        *img_addy_ptr = addr++;
+        *pixel_dat_ptr = (block & 0xFF) >> 4;
+
+        *img_addy_ptr = addr++;
+        *pixel_dat_ptr = ((block >> 8) & 0xFF) >> 4;
+
+        *img_addy_ptr = addr++;
+        *pixel_dat_ptr = ((block >> 16) & 0xFF) >> 4;
+
+        *img_addy_ptr = addr++;
+        *pixel_dat_ptr = ((block >> 24) & 0xFF) >> 4;
+    }
+}
+
+// Write a quarter image to a specific quadrant of the pixel buffer
+void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
+{
+    volatile int* const pixel_dat_ptr = (volatile int*)(PIXEL_DAT_BASE | 0x80000000);
+    volatile int* const img_addy_ptr  = (volatile int*)(IMG_ADDY_BASE  | 0x80000000);
+
+    uint8_t* src = (uint8_t*)((uint32_t)buffer | 0x80000000);
+
+    uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
+    uint32_t pixelBufferAddr = 0;
+
+    if (displayIndex & 0x1)
+        pixelBufferAddr += QUAD_IMAGE_WIDTH;
+    if (displayIndex & 0x2)
+        pixelBufferAddr += QUAD_IMAGE_SIZE * 2;
+
+    for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++) {
+        for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++) {
+            *img_addy_ptr  = pixelBufferAddr;
+            *pixel_dat_ptr = src[imgAddr] >> 4;
+            imgAddr++;
+            pixelBufferAddr++;
+        }
+        pixelBufferAddr += FULL_IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
+    }
+}
+
+
 int main() {
     int currently_displaying = -1;
     uint32_t last_frame_time = 0;
@@ -70,10 +245,11 @@ int main() {
 
     IOWR(DATA_MAILBOX_BASE, 3, 0x01);
 
-    volatile int* const pixel_dat_ptr = (volatile int*)(PIXEL_DAT_BASE | 0x80000000);
-    volatile int* const img_addy_ptr  = (volatile int*)(IMG_ADDY_BASE  | 0x80000000);
-
     while(1) {
+        // Update shared quad mode flag from switches each iteration
+        // Core 0 reads this to know what frame size to request
+        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
+
         if (new_frame_ready) {
             new_frame_ready = 0;
 
@@ -92,30 +268,63 @@ int main() {
 
             currently_displaying = current_frame_index;
 
-            // Shared accel data, for quad image display.
-            int16_t x_val = shared_accel->x;
-            int16_t y_val = shared_accel->y;
+            // Get source buffer (uncached)
+            uint8_t* source = (uint8_t*)((uint32_t)buffers[currently_displaying] | 0x80000000);
 
-            uint8_t* source_buffer = buffers[currently_displaying];
-            uint32_t* src_ptr32 = (uint32_t*)((uint32_t)source_buffer | 0x80000000);
-            uint32_t* const src_end32 = (uint32_t*)(((uint32_t)source_buffer + IMAGE_SIZE) | 0x80000000);
+            uint8_t isQuad = shared_display->isQuad;
+            int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
 
-            int addr = 0;
+            if (isQuad)
+            {
+                // Quad mode: one quarter image received, process 4 ways
 
-            while (src_ptr32 < src_end32) {
-                uint32_t block = *src_ptr32++;
+                // Slot 0: raw
+                memcpy(processing_buffer, source, QUAD_IMAGE_SIZE);
 
-                *img_addy_ptr = addr++;
-                *pixel_dat_ptr = (block & 0xFF) >> 4;
+                // Slot 1: flip
+                process_flip(source,
+                             processing_buffer + QUAD_IMAGE_SIZE,
+                             QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
 
-                *img_addy_ptr = addr++;
-                *pixel_dat_ptr = ((block >> 8) & 0xFF) >> 4;
+                // Slot 2: blur
+                box_blur(source,
+                         processing_buffer + 2 * QUAD_IMAGE_SIZE,
+                         QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
-                *img_addy_ptr = addr++;
-                *pixel_dat_ptr = ((block >> 16) & 0xFF) >> 4;
+                // Slot 3: edge
+                sobel_edge_detection(source,
+                                     processing_buffer + 3 * QUAD_IMAGE_SIZE,
+                                     QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
-                *img_addy_ptr = addr++;
-                *pixel_dat_ptr = ((block >> 24) & 0xFF) >> 4;
+                // Display each quadrant using indices controlled by Core 0 double-tap
+                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[0], 0);
+                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[1], 1);
+                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[2], 2);
+                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[3], 3);
+            }
+            else
+            {
+                // Full mode: SW[2:1] selects processing
+                switch (processMode) {
+                    case PROC_FLIP:
+                        process_flip(source, processing_buffer,
+                                     FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT, 1);
+                        display_full_image(processing_buffer);
+                        break;
+                    case PROC_BLUR:
+                        box_blur(source, processing_buffer,
+                                 FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT);
+                        display_full_image(processing_buffer);
+                        break;
+                    case PROC_EDGE:
+                        sobel_edge_detection(source, processing_buffer,
+                                             FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT);
+                        display_full_image(processing_buffer);
+                        break;
+                    default: // PROC_RAW
+                        display_full_image(source);
+                        break;
+                }
             }
         }
     }

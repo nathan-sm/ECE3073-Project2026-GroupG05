@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "system.h"
 #include "io.h"
@@ -34,7 +35,7 @@
 #define CAM_QUAD_MASK 0x2
 #define CAM_PACK_MASK 0x4
 #define CAM_FLASH_MASK 0x8
-#define CAM_WRITE_MASK 0x10;
+#define CAM_WRITE_MASK 0x10
 #define CAM_CMD_DEFAULT 0x0    // Greyscale
 uint8_t g_camLastConfig = 0x0;
 
@@ -42,11 +43,39 @@ uint8_t g_camLastConfig = 0x0;
 uint8_t full_image_buffer[FULL_IMAGE_SIZE];
 uint8_t quad_image_buffer[QUAD_IMAGE_BUF_SIZE];
 
+// Processed image output buffers
+uint8_t processed_full[FULL_IMAGE_SIZE];
+uint8_t processed_quad[QUAD_IMAGE_BUF_SIZE];
+
+// Processing mode (selected by SW[2:1])
+#define PROC_RAW   0
+#define PROC_FLIP  1
+#define PROC_BLUR  2
+#define PROC_EDGE  3
+
 // Array of which image to display in each position in quad display mode
 uint32_t g_quadDisplayIndices[4] = { 0, 1, 2, 3 };
 // Threshold for controlling quad display using the gyro
 #define GYRO_CONTROL_THRESH_SINGLE 60
 #define GYRO_CONTROL_THRESH_DOUBLE 90
+
+/**
+ * Flip image across both axes (180-degree rotation).
+ * bpp = bytes per pixel (1 for greyscale, future: 2 for packed RGB).
+ */
+void process_flip(uint8_t *input, uint8_t *output,
+                  int width, int height, int bpp)
+{
+    int totalPixels = width * height;
+    for (int i = 0; i < totalPixels; i++) {
+        int srcIdx = (totalPixels - 1 - i) * bpp;
+        int dstIdx = i * bpp;
+        for (int b = 0; b < bpp; b++) {
+            output[dstIdx + b] = input[srcIdx + b];
+        }
+    }
+}
+
 
 /** Display an FPS value on the 7-segment displays
  *
@@ -122,24 +151,23 @@ void receive_frame(bool isQuad)
 
 /** Display the full image currently in the full_image_buffer.
  *
- * @returns Time taken to transfer image, in ms.
+ * @param buffer Pointer to the image data to display.
  */
-void display_full_image()
+void display_full_image(uint8_t *buffer)
 {
     for (uint32_t i = 0; i < FULL_IMAGE_SIZE; i++) {
         IOWR(IMG_ADDY_BASE,  0, i);
-        IOWR(PIXEL_DAT_BASE, 0, full_image_buffer[i] >> 4);
+        IOWR(PIXEL_DAT_BASE, 0, buffer[i] >> 4);
     }
 }
 
 /** Display one of the images in quad_display_buffer on the screen.
  *
+ * @param buffer Pointer to the quad image buffer.
  * @param imageIndex Which image to display
  * @param displayIndex Where on the display to place the image (0 - top left, 1 - top right, 2 - bottom left, 3 - bottom right)
- *
- * @returns Time taken to transfer images, in ms.
  */
-void display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
+void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
 {
 	uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
 	uint32_t pixelBufferAddr = 0;
@@ -162,7 +190,7 @@ void display_quad_image(uint32_t imageIndex, uint32_t displayIndex)
 		for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++)
 		{
 			IOWR(IMG_ADDY_BASE,  0, pixelBufferAddr);
-			IOWR(PIXEL_DAT_BASE, 0, quad_image_buffer[imgAddr] >> 4);
+			IOWR(PIXEL_DAT_BASE, 0, buffer[imgAddr] >> 4);
 
 			imgAddr++;
 			pixelBufferAddr++;
@@ -208,15 +236,6 @@ int main(void) {
     alt_avalon_spi_command(SPI_0_BASE, ESP_CAM_SS,
                            1, &startup_cmd,
                            0, NULL, 0);
-    for (int i = 0; i < FULL_IMAGE_SIZE; i++)
-    {
-    	full_image_buffer[i] = 0x00;
-    }
-
-    for (int i = 0; i < QUAD_IMAGE_BUF_SIZE; i++)
-    {
-    	quad_image_buffer[i] = 0x00;
-    }
 
     // Initialize full image buffer
     for (int i = 0; i < FULL_IMAGE_SIZE; i++)
@@ -237,37 +256,60 @@ int main(void) {
     }
 
     gyro_set_dtap_callback(&doubletap_callback);
-    // Array of which image to display in each position in quad display mode
-    uint32_t quadDisplayIndices[4] = { 0, 1, 2, 3 };
 
     while (1) {
         // Wait for CAM_READY signal (GPIO[2] via cam_redy PIO)
         if (IORD(CAM_REDY_BASE, 0) == 1)
         {
-        	uint16_t swStatus = IORD(SW_BASE, 0);
-        	bool isQuad = swStatus & 0x1;
+            uint16_t swStatus = IORD(SW_BASE, 0);
+            bool isQuad = swStatus & 0x1;
+            int processMode = (swStatus >> 1) & 0x3;  // SW[2:1]
 
-        	unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
+            // Fetch raw frame from camera
+            receive_frame(isQuad);
 
-			// Fetch and display the frame
-			receive_frame(isQuad);
+            // Start timing (covers processing + display)
+            unsigned int t_start = IORD(USEC_COUNTER_BASE, 0);
 
-			if (isQuad)
-			{
-				display_quad_image(g_quadDisplayIndices[0], 0);
-				display_quad_image(g_quadDisplayIndices[1], 1);
-				display_quad_image(g_quadDisplayIndices[2], 2);
-				display_quad_image(g_quadDisplayIndices[3], 3);
-			}
-			else
-			{
-				display_full_image();
-			}
+            if (isQuad)
+            {
+            	// In quad mode: apply processing to each slot
 
+            	// slot 0: raw
+            	memcpy(processed_quad, quad_image_buffer, QUAD_IMAGE_SIZE);
 
-		    uint32_t frameTime = IORD(USEC_COUNTER_BASE, 0) - t_start;
+            	// slot 1: flip
+            	process_flip(quad_image_buffer,
+            	             processed_quad + QUAD_IMAGE_SIZE,
+            	             QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
 
-			display_fps(frameTime);
+            	// slot 2: blur
+            	memcpy(processed_quad + 2 * QUAD_IMAGE_SIZE,
+            	       quad_image_buffer, QUAD_IMAGE_SIZE);
+
+            	// slot 3: edge
+            	memcpy(processed_quad + 3 * QUAD_IMAGE_SIZE,
+            	       quad_image_buffer, QUAD_IMAGE_SIZE);
+
+                display_quad_image(processed_quad, g_quadDisplayIndices[0], 0);
+                display_quad_image(processed_quad, g_quadDisplayIndices[1], 1);
+                display_quad_image(processed_quad, g_quadDisplayIndices[2], 2);
+                display_quad_image(processed_quad, g_quadDisplayIndices[3], 3);
+            }
+            else
+            {
+                // In single mode: SW[2:1] selects processing
+                if (processMode == PROC_FLIP) {
+                    process_flip(full_image_buffer, processed_full,
+                                 FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT, 1);
+                } else {
+                    // Raw (and placeholders for blur/edge)
+                    memcpy(processed_full, full_image_buffer, FULL_IMAGE_SIZE);
+                }
+                display_full_image(processed_full);
+            }
+
+            display_fps(IORD(USEC_COUNTER_BASE, 0) - t_start);
         }
 
 //        printf("Frame written to pixel buffer\n");

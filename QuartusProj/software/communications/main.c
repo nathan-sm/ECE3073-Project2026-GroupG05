@@ -1,4 +1,7 @@
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "system.h"
 #include "io.h"
 #include "sys/alt_irq.h"
@@ -8,6 +11,7 @@
 // --- Shared Memory Configuration ---
 #define SHARED_MEM_BASE (SDRAM_CONTROL_BASE + 0x01000000)
 #define IMAGE_SIZE 76800
+#define QUAD_IMAGE_SIZE 19200
 
 // Triple Buffer Pointers
 uint8_t* buffers[3] = {
@@ -23,11 +27,28 @@ typedef struct {
     int16_t z;
 } SharedAccelData;
 
-// Map the struct to SDRAM right after the 3 image buffers
+// Shared display state between cores
+typedef struct {
+    volatile uint8_t isQuad;           // Core 1 writes (from SW[0]), Core 0 reads
+    volatile uint8_t _pad[3];
+    volatile uint32_t quadDisplayIndices[4]; // Core 0 writes (double-tap), Core 1 reads
+} SharedDisplayState;
+
+// Map the structs to SDRAM right after the 3 image buffers
 SharedAccelData* shared_accel = (SharedAccelData*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE)) | 0x80000000);
+SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
 
 // Global flags
 volatile int free_buffers[3] = {1, 1, 1}; // 1 = free, 0 = in use
+
+// Camera config tracking
+#define CAM_QUAD_MASK  0x02
+#define CAM_WRITE_MASK 0x10
+uint8_t g_camLastConfig = 0;
+
+// Gyro thresholds for quad display control
+#define GYRO_THRESH_SINGLE 60
+#define GYRO_THRESH_DOUBLE 90
 
 // --- Interrupt Service Routine (ISR) ---
 static void mailbox_ack_isr(void* context) {
@@ -37,8 +58,33 @@ static void mailbox_ack_isr(void* context) {
     }
 }
 
+// --- Double-tap callback: cycle quad display based on tilt ---
+void doubletap_handler()
+{
+    if (!shared_display->isQuad)
+        return;
+
+    DeviceRotation rot = accel_get_device_rotation();
+
+    if ((abs(rot.x_axis) < GYRO_THRESH_SINGLE
+            && abs(rot.y_axis) < GYRO_THRESH_SINGLE)
+            || abs(rot.x_axis) + abs(rot.y_axis) < GYRO_THRESH_DOUBLE)
+        return;
+
+    uint8_t imageX = rot.x_axis > 0 ? 0 : 1;
+    uint8_t imageY = rot.y_axis < 0 ? 0 : 1;
+    uint8_t idx = (imageY << 1) | imageX;
+
+    shared_display->quadDisplayIndices[idx] = (shared_display->quadDisplayIndices[idx] + 1) % 4;
+
+    printf("Quad display: [%lu, %lu, %lu, %lu]\n",
+           shared_display->quadDisplayIndices[0], shared_display->quadDisplayIndices[1],
+           shared_display->quadDisplayIndices[2], shared_display->quadDisplayIndices[3]);
+}
+
 int main() {
     accel_setup();
+    gyro_set_dtap_callback(&doubletap_handler);
 
     alt_ic_isr_register(
         ACK_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID,
@@ -50,8 +96,15 @@ int main() {
 
     IOWR(ACK_MAILBOX_BASE, 3, 0x01);
 
+    // Initialize shared display state
+    shared_display->isQuad = 0;
+    shared_display->quadDisplayIndices[0] = 0;
+    shared_display->quadDisplayIndices[1] = 1;
+    shared_display->quadDisplayIndices[2] = 2;
+    shared_display->quadDisplayIndices[3] = 3;
+
     // Initial camera setup command
-    uint8_t startup_cmd = 0x10;
+    uint8_t startup_cmd = CAM_WRITE_MASK;
     alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, 0, NULL, 0);
 
     while(1) {
@@ -69,13 +122,21 @@ int main() {
         }
 
         // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
-        // This ensures we only fetch complete frames and don't overwhelm the SPI/SDRAM bus.
         while (IORD(CAM_REDY_BASE, 0) == 0);
 
         free_buffers[write_target] = 0; // Lock buffer
 
-        // 2. Fetch Frame via SPI into the targeted buffer
-        uint8_t cmd = 0x10;
+        // 2. Check quad mode (set by Core 1 from SW[0])
+        bool isQuad = shared_display->isQuad;
+
+        // 3. Build camera command — only set WRITE_MASK when config changes
+        uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
+        if (cmd != g_camLastConfig) {
+            g_camLastConfig = cmd;
+            cmd |= CAM_WRITE_MASK;
+        }
+
+        uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
         uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target] | 0x80000000);
 
         alt_avalon_spi_command(
@@ -83,12 +144,12 @@ int main() {
             0,
             1,
             &cmd,
-            IMAGE_SIZE,
+            readSize,
             dest_ptr,
             0
         );
 
-        // 3. Fetch and Share Accelerometer Data
+        // 4. Fetch and Share Accelerometer Data
         accel_update();
         DeviceRotation current_rot = accel_get_device_rotation();
 
@@ -96,7 +157,7 @@ int main() {
         shared_accel->y = current_rot.y_axis;
         shared_accel->z = current_rot.z_axis;
 
-        // 4. Send the finished buffer token to the Image CPU
+        // 5. Send the finished buffer token to the Image CPU
         while (IORD(DATA_MAILBOX_BASE, 2) & 0x02);
         IOWR(DATA_MAILBOX_BASE, 0, write_target);
     }
