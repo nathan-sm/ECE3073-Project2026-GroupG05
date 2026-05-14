@@ -28,7 +28,7 @@ typedef struct {
 SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
 SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
 
-// Processing output buffer — avoids writing into shared triple buffers
+// Processing output buffer ï¿½ avoids writing into shared triple buffers
 uint8_t processing_buffer[IMAGE_SIZE];
 
 volatile int new_frame_ready = 0;
@@ -214,7 +214,7 @@ void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIn
             imgAddr++;
             pixelBufferAddr++;
         }
-        pixelBufferAddr += FULL_IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
+        pixelBufferAddr += IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
     }
 }
 
@@ -296,17 +296,17 @@ int main() {
                 switch (processMode) {
                     case PROC_FLIP:
                         process_flip(source, processing_buffer,
-                                     FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT, 1);
+                                     IMAGE_WIDTH, IMAGE_HEIGHT, 1);
                         display_full_image(processing_buffer);
                         break;
                     case PROC_BLUR:
                         box_blur(source, processing_buffer,
-                                 FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT);
+                                 IMAGE_WIDTH, IMAGE_HEIGHT);
                         display_full_image(processing_buffer);
                         break;
                     case PROC_EDGE:
                         sobel_edge_detection(source, processing_buffer,
-                                             FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT);
+                                             IMAGE_WIDTH, IMAGE_HEIGHT);
                         display_full_image(processing_buffer);
                         break;
                     default: // PROC_RAW
