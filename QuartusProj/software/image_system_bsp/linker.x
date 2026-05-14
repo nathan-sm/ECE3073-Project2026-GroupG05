@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Thu Apr 30 13:15:14 EST 2026
+ * Generated: Fri May 08 13:17:45 EST 2026
  */
 
 /*
@@ -93,6 +93,7 @@ SECTIONS
      *
      */
 
+    .exceptions 0x4020020 : AT ( 0x4020020 )
     .exceptions 0x4020020 : AT ( 0x4020020 )
     {
         PROVIDE (__ram_exceptions_start = ABSOLUTE(.));
@@ -224,7 +225,9 @@ SECTIONS
         KEEP (*(.jcr))
         . = ALIGN(4);
     } > ram = 0x3a880100 /* NOP instruction (always in big-endian byte ordering) */
+    } > ram = 0x3a880100 /* NOP instruction (always in big-endian byte ordering) */
 
+    .rodata :
     .rodata :
     {
         PROVIDE (__ram_rodata_start = ABSOLUTE(.));
@@ -244,6 +247,7 @@ SECTIONS
      *
      */
 
+    .rwdata : AT ( LOADADDR (.text) + SIZEOF (.text) )
     .rwdata : AT ( LOADADDR (.text) + SIZEOF (.text) )
     {
         PROVIDE (__ram_rwdata_start = ABSOLUTE(.));
@@ -267,6 +271,7 @@ SECTIONS
 
     PROVIDE (__flash_rwdata_start = LOADADDR(.rwdata));
 
+    .bss :
     .bss :
     {
         __bss_start = ABSOLUTE(.);
@@ -313,6 +318,7 @@ SECTIONS
      */
 
     .sdram_control : AT ( LOADADDR (.rwdata) + SIZEOF (.rwdata) )
+    .sdram_control : AT ( LOADADDR (.rwdata) + SIZEOF (.rwdata) )
     {
         PROVIDE (_alt_partition_sdram_control_start = ABSOLUTE(.));
         *(.sdram_control .sdram_control. sdram_control.*)
@@ -332,6 +338,7 @@ SECTIONS
      *
      */
 
+    .ram LOADADDR (.sdram_control) + SIZEOF (.sdram_control) : AT ( LOADADDR (.sdram_control) + SIZEOF (.sdram_control) )
     .ram LOADADDR (.sdram_control) + SIZEOF (.sdram_control) : AT ( LOADADDR (.sdram_control) + SIZEOF (.sdram_control) )
     {
         PROVIDE (_alt_partition_ram_start = ABSOLUTE(.));
