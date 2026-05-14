@@ -262,6 +262,7 @@ int main(void) {
 //        printf("Frame written to pixel buffer\n");
 
         if (accel_update())
+        if (accel_update())
         {
         	printf("Gyro read failed\n");
         }

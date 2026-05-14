@@ -107,14 +107,15 @@ synthesis
 #*.qip
 
 # Software removals
-software/*_bsp/*
-software/*/.settings/
-**/software/*/obj/
-software/*/.cproject
+# software/*_bsp/*
+# software/*/.settings/
+# software/*/.cproject
 software/*/.force_relink
-software/*/.project
-software/*/create-this-app
-software/*/Makefile
+# software/*/.project
+# software/*/create-this-app
+# software/*/Makefile
+
+**/software/*/obj/
 **/software/*/*.elf
 **/software/*/*.map
 **/software/*/*.objdump
@@ -122,5 +123,6 @@ software/*/Makefile
 **/software/*/drivers/**
 **/software/*/HAL/**
 **/software/*/**.a
+**/software/*_bsp/system.h
 
 .claude/
