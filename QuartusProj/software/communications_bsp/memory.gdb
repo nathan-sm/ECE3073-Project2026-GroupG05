@@ -1,9 +1,9 @@
 # memory.gdb - GDB memory region definitions
 #
-# Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
+# Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
 # SOPC Builder design path: ../../NiosSystem.sopcinfo
 #
-# Generated: Thu May 14 15:00:54 EST 2026
+# Generated: Thu May 14 15:05:43 EST 2026
 
 # DO NOT MODIFY THIS FILE
 #
@@ -48,6 +48,3 @@
 
 # sdram_control
 memory 0x0 0x4000000 cache
-
-# ram
-memory 0x4020000 0x4039000 cache

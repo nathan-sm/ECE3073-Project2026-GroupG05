@@ -1,10 +1,10 @@
 /*
  * alt_sys_init.c - HAL initialization source
  *
- * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Thu May 14 15:00:54 EST 2026
+ * Generated: Thu May 14 15:05:27 EST 2026
  */
 
 /*
@@ -60,15 +60,16 @@
 
 #include "altera_nios2_gen2_irq.h"
 #include "altera_avalon_jtag_uart.h"
-#include "altera_avalon_spi.h"
+#include "altera_avalon_mailbox_simple.h"
 
 /*
  * Allocate the device storage
  */
 
-ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( NIOS2_GEN2_0, nios2_gen2_0);
+ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( IMAGE_PROC, image_proc);
 ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART_0, jtag_uart_0);
-ALTERA_AVALON_SPI_INSTANCE ( SPI_0, spi_0);
+ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( ACK_MAILBOX, ack_mailbox);
+ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DATA_MAILBOX, data_mailbox);
 
 /*
  * Initialize the interrupt controller devices
@@ -80,7 +81,7 @@ ALTERA_AVALON_SPI_INSTANCE ( SPI_0, spi_0);
 
 void alt_irq_init ( const void* base )
 {
-    ALTERA_NIOS2_GEN2_IRQ_INIT ( NIOS2_GEN2_0, nios2_gen2_0);
+    ALTERA_NIOS2_GEN2_IRQ_INIT ( IMAGE_PROC, image_proc);
     alt_irq_cpu_enable_interrupts();
 }
 
@@ -92,5 +93,6 @@ void alt_irq_init ( const void* base )
 void alt_sys_init( void )
 {
     ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART_0, jtag_uart_0);
-    ALTERA_AVALON_SPI_INIT ( SPI_0, spi_0);
+    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( ACK_MAILBOX, ack_mailbox);
+    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DATA_MAILBOX, data_mailbox);
 }

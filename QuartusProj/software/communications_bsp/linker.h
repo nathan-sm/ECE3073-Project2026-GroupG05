@@ -1,10 +1,10 @@
 /*
- * alt_sys_init.c - HAL initialization source
+ * linker.h - Linker script mapping information
  *
- * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'comms' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Thu May 14 15:00:54 EST 2026
+ * Generated: Thu May 14 15:05:43 EST 2026
  */
 
 /*
@@ -48,49 +48,56 @@
  * of California and by the laws of the United States of America.
  */
 
-#include "system.h"
-#include "sys/alt_irq.h"
-#include "sys/alt_sys_init.h"
+#ifndef __LINKER_H_
+#define __LINKER_H_
 
-#include <stddef.h>
 
 /*
- * Device headers
+ * BSP controls alt_load() behavior in crt0.
+ *
  */
 
-#include "altera_nios2_gen2_irq.h"
-#include "altera_avalon_jtag_uart.h"
-#include "altera_avalon_spi.h"
+#define ALT_LOAD_EXPLICITLY_CONTROLLED
+
 
 /*
- * Allocate the device storage
+ * Base address and span (size in bytes) of each linker region
+ *
  */
 
-ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( NIOS2_GEN2_0, nios2_gen2_0);
-ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART_0, jtag_uart_0);
-ALTERA_AVALON_SPI_INSTANCE ( SPI_0, spi_0);
+#define RESET_REGION_BASE 0x800000
+#define RESET_REGION_SPAN 32
+#define SDRAM_CONTROL_BEFORE_RESET_REGION_BASE 0x0
+#define SDRAM_CONTROL_BEFORE_RESET_REGION_SPAN 8388608
+#define SDRAM_CONTROL_REGION_BASE 0x800020
+#define SDRAM_CONTROL_REGION_SPAN 8388576
+
 
 /*
- * Initialize the interrupt controller devices
- * and then enable interrupts in the CPU.
- * Called before alt_sys_init().
- * The "base" parameter is ignored and only
- * present for backwards-compatibility.
+ * Devices associated with code sections
+ *
  */
 
-void alt_irq_init ( const void* base )
-{
-    ALTERA_NIOS2_GEN2_IRQ_INIT ( NIOS2_GEN2_0, nios2_gen2_0);
-    alt_irq_cpu_enable_interrupts();
-}
+#define ALT_EXCEPTIONS_DEVICE SDRAM_CONTROL
+#define ALT_RESET_DEVICE SDRAM_CONTROL
+#define ALT_RODATA_DEVICE SDRAM_CONTROL
+#define ALT_RWDATA_DEVICE SDRAM_CONTROL
+#define ALT_TEXT_DEVICE SDRAM_CONTROL
+
 
 /*
- * Initialize the non-interrupt controller devices.
- * Called after alt_irq_init().
+ * Initialization code at the reset address is allowed (e.g. no external bootloader).
+ *
  */
 
-void alt_sys_init( void )
-{
-    ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART_0, jtag_uart_0);
-    ALTERA_AVALON_SPI_INIT ( SPI_0, spi_0);
-}
+#define ALT_ALLOW_CODE_AT_RESET
+
+
+/*
+ * The alt_load() facility is called from crt0 to copy sections into RAM.
+ *
+ */
+
+#define ALT_LOAD_COPY_RWDATA
+
+#endif /* __LINKER_H_ */

@@ -2,13 +2,13 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 14, 2026 3:00:54 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778734854094</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>C:\Users\natha\Documents\ECE3073\ECE3073-Project2026-Group05\QuartusProj\software\image_system_bsp</BspGeneratedLocation>
+        <BspGeneratedTimeStamp>May 14, 2026 3:05:43 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778735143589</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>C:\Users\natha\Documents\ECE3073\ECE3073-Project2026-Group05\QuartusProj\software\communications_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>..\..\NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
-        <Cpu>nios2_gen2_0</Cpu>
+        <Cpu>comms</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
         <Setting>
                 <SettingName>hal.sys_clk_timer</SettingName>
@@ -110,7 +110,7 @@
                 <SettingName>hal.linker.enable_alt_load_copy_exceptions</SettingName>
                 <Identifier>none</Identifier>
                 <Type>Boolean</Type>
-                <Value>1</Value>
+                <Value>0</Value>
                 <DefaultValue>0</DefaultValue>
                 <DestinationFile>none</DestinationFile>
                 <Description>Causes the alt_load() facility to copy the .exceptions section. If true, this setting defines the macro ALT_LOAD_COPY_EXCEPTIONS in linker.h.</Description>
@@ -194,7 +194,7 @@
                 <SettingName>hal.stdin</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>jtag_uart_0</Value>
+                <Value>jtag_uart_1</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDIN character-mode device. This setting is used by the ALT_STDIN family of defines in system.h.</Description>
@@ -206,7 +206,7 @@
                 <SettingName>hal.stdout</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>jtag_uart_0</Value>
+                <Value>jtag_uart_1</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDOUT character-mode device. This setting is used by the ALT_STDOUT family of defines in system.h.</Description>
@@ -218,7 +218,7 @@
                 <SettingName>hal.stderr</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>jtag_uart_0</Value>
+                <Value>jtag_uart_1</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDERR character-mode device. This setting is used by the ALT_STDERR family of defines in system.h.</Description>
@@ -890,7 +890,7 @@
                 <SettingName>altera_avalon_jtag_uart_driver.enable_jtag_uart_ignore_fifo_full_error</SettingName>
                 <Identifier>ALTERA_AVALON_JTAG_UART_IGNORE_FIFO_FULL_ERROR</Identifier>
                 <Type>BooleanDefineOnly</Type>
-                <Value>false</Value>
+                <Value>true</Value>
                 <DefaultValue>false</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Enable JTAG UART driver to recover when host is inactive causing buffer to full without returning error. Printf will not fail with this recovery.</Description>
@@ -898,6 +898,30 @@
                 <Enabled>false</Enabled>
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
+        <LinkerRegion>
+                <regionName>sdram_control_BEFORE_RESET</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>0</offset>
+                <size>8388608</size>
+                <baseAddress>0x0</baseAddress>
+                <addressRange>0x00000000 - 0x007FFFFF</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>reset</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>8388608</offset>
+                <size>32</size>
+                <baseAddress>0x800000</baseAddress>
+                <addressRange>0x00800000 - 0x0080001F</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>sdram_control</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>8388640</offset>
+                <size>8388576</size>
+                <baseAddress>0x800020</baseAddress>
+                <addressRange>0x00800020 - 0x00FFFFFF</addressRange>
+        </LinkerRegion>
         <MemoryMap>
                 <slaveDescriptor>sdram_control</slaveDescriptor>
                 <addressRange>0x00000000 - 0x03FFFFFF</addressRange>
@@ -905,86 +929,50 @@
                 <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>ram</slaveDescriptor>
-                <addressRange>0x04020000 - 0x04038FFF</addressRange>
-                <addressSpan>102400</addressSpan>
-                <attributes>memory</attributes>
-        </MemoryMap>
-        <MemoryMap>
                 <slaveDescriptor>spi_0</slaveDescriptor>
-                <addressRange>0x04041000 - 0x0404101F</addressRange>
+                <addressRange>0x04001000 - 0x0400101F</addressRange>
                 <addressSpan>32</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>usec_counter</slaveDescriptor>
-                <addressRange>0x04041020 - 0x0404102F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
-                <addressRange>0x04041030 - 0x0404103F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>img_addy</slaveDescriptor>
-                <addressRange>0x04041040 - 0x0404104F</addressRange>
+                <slaveDescriptor>ack_mailbox</slaveDescriptor>
+                <addressRange>0x04001020 - 0x0400102F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>cam_redy</slaveDescriptor>
-                <addressRange>0x04041050 - 0x0404105F</addressRange>
+                <addressRange>0x04001030 - 0x0400103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>pixel_dat</slaveDescriptor>
-                <addressRange>0x04041060 - 0x0404106F</addressRange>
+                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>hex53</slaveDescriptor>
-                <addressRange>0x04041070 - 0x0404107F</addressRange>
+                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <addressRange>0x04001050 - 0x0400105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>hex20</slaveDescriptor>
-                <addressRange>0x04041080 - 0x0404108F</addressRange>
+                <slaveDescriptor>data_mailbox</slaveDescriptor>
+                <addressRange>0x04001060 - 0x0400106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>key</slaveDescriptor>
-                <addressRange>0x04041090 - 0x0404109F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>sw</slaveDescriptor>
-                <addressRange>0x040410A0 - 0x040410AF</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>ledr</slaveDescriptor>
-                <addressRange>0x040410B0 - 0x040410BF</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>jtag_uart_0</slaveDescriptor>
-                <addressRange>0x040410C0 - 0x040410C7</addressRange>
+                <slaveDescriptor>jtag_uart_1</slaveDescriptor>
+                <addressRange>0x04001078 - 0x0400107F</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>
         <LinkerSection>
                 <sectionName>.text</sectionName>
-                <regionName>ram</regionName>
+                <regionName>sdram_control</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.rodata</sectionName>
