@@ -18,13 +18,6 @@ uint8_t* buffers[3] = {
     (uint8_t*)(IMAGE_READ_BUF_C)
 };
 
-// Shared display state between cores
-typedef struct {
-    volatile uint8_t isQuad;           // Core 1 writes (from SW[0]), Core 0 reads
-    volatile uint8_t _pad[3];
-    volatile uint32_t quadDisplayIndices[4]; // Core 0 writes (double-tap), Core 1 reads
-} SharedDisplayState;
-
 // Map the structs to SDRAM right after the 3 image buffers
 SharedAccelData* shared_accel = (SharedAccelData*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE)) | 0x80000000);
 SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
@@ -120,7 +113,7 @@ int main() {
         // 2. Check quad mode (set by Core 1 from SW[0])
         bool isQuad = shared_display->isQuad;
 
-        // 3. Build camera command — only set WRITE_MASK when config changes
+        // 3. Build camera command ï¿½ only set WRITE_MASK when config changes
         uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
         if (cmd != g_camLastConfig) {
             g_camLastConfig = cmd;

@@ -16,4 +16,10 @@ typedef struct {
     int16_t z;
 } SharedAccelData;
 
+typedef struct {
+    volatile uint8_t isQuad;
+    volatile uint8_t _pad[3];
+    volatile uint32_t quadDisplayIndices[4];
+} SharedDisplayState;
+
 #endif

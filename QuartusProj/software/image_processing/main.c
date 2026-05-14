@@ -5,6 +5,7 @@
 #include "sys/alt_irq.h"
 #include <stdlib.h>
 
+#include "common_defs.h"
 #include "memory_addresses.h"
 
 // Processing modes (selected by SW[2:1])
@@ -18,12 +19,6 @@ uint8_t* buffers[3] = {
     (uint8_t*)(IMAGE_READ_BUF_B),
     (uint8_t*)(IMAGE_READ_BUF_C)
 };
-
-typedef struct {
-    volatile uint8_t isQuad;
-    volatile uint8_t _pad[3];
-    volatile uint32_t quadDisplayIndices[4];
-} SharedDisplayState;
 
 SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
 SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
