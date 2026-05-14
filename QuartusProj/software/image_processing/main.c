@@ -5,13 +5,7 @@
 #include "sys/alt_irq.h"
 #include <stdlib.h>
 
-#define SHARED_MEM_BASE (SDRAM_CONTROL_BASE + 0x01000000)
-#define IMAGE_SIZE 76800
-#define QUAD_IMAGE_WIDTH  160
-#define QUAD_IMAGE_HEIGHT 120
-#define QUAD_IMAGE_SIZE   19200
-#define FULL_IMAGE_WIDTH  320
-#define FULL_IMAGE_HEIGHT 240
+#include "memory_addresses.h"
 
 // Processing modes (selected by SW[2:1])
 #define PROC_RAW   0
@@ -20,16 +14,10 @@
 #define PROC_EDGE  3
 
 uint8_t* buffers[3] = {
-    (uint8_t*)(SHARED_MEM_BASE),
-    (uint8_t*)(SHARED_MEM_BASE + IMAGE_SIZE),
-    (uint8_t*)(SHARED_MEM_BASE + (2 * IMAGE_SIZE))
+    (uint8_t*)(IMAGE_READ_BUF_A),
+    (uint8_t*)(IMAGE_READ_BUF_B),
+    (uint8_t*)(IMAGE_READ_BUF_C)
 };
-
-typedef struct {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-} SharedAccelData;
 
 typedef struct {
     volatile uint8_t isQuad;
@@ -37,7 +25,7 @@ typedef struct {
     volatile uint32_t quadDisplayIndices[4];
 } SharedDisplayState;
 
-SharedAccelData* shared_accel = (SharedAccelData*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE)) | 0x80000000);
+SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
 SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
 
 // Processing output buffer — avoids writing into shared triple buffers

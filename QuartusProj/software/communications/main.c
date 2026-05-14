@@ -8,24 +8,15 @@
 #include "altera_avalon_spi.h"
 #include "accelerometer.h"
 
-// --- Shared Memory Configuration ---
-#define SHARED_MEM_BASE (SDRAM_CONTROL_BASE + 0x01000000)
-#define IMAGE_SIZE 76800
-#define QUAD_IMAGE_SIZE 19200
+#include "common_defs.h"
+#include "memory_addresses.h"
 
 // Triple Buffer Pointers
 uint8_t* buffers[3] = {
-    (uint8_t*)(SHARED_MEM_BASE),
-    (uint8_t*)(SHARED_MEM_BASE + IMAGE_SIZE),
-    (uint8_t*)(SHARED_MEM_BASE + (2 * IMAGE_SIZE))
+    (uint8_t*)(IMAGE_READ_BUF_A),
+    (uint8_t*)(IMAGE_READ_BUF_B),
+    (uint8_t*)(IMAGE_READ_BUF_C)
 };
-
-// Struct to hold the accelerometer data safely
-typedef struct {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-} SharedAccelData;
 
 // Shared display state between cores
 typedef struct {
