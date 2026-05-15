@@ -20,50 +20,40 @@ SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
 
 // ---- Display Functions ----
 
-// Write a full image to pixel buffer using optimized 32-bit reads
+// Write a full image to pixel buffer using safe 16-bit reads (1 RGB Pixel per loop)
 void display_full_image(uint16_t *buffer)
 {
-    uint32_t* src_ptr32 = (uint32_t*)(buffer);
-    uint32_t* const src_end32 = (uint32_t*)(buffer + IMAGE_SIZE);
+    // Use 16-bit pointer to prevent unaligned memory exceptions
+    uint16_t* src = buffer;
+    uint32_t addr = 0;
 
-    int addr = 0;
-
-    while (src_ptr32 < src_end32) {
-        uint32_t block = *src_ptr32++;
-
+    for (uint32_t i = 0; i < IMAGE_SIZE; i++) {
         IOWR(IMG_ADDY_BASE, 0, addr++);
-        IOWR(PIXEL_DAT_BASE, 0, block & 0x0FFF);
-
-        IOWR(IMG_ADDY_BASE, 0, addr++);
-        IOWR(PIXEL_DAT_BASE, 0, (block >> 16) & 0x0FFF);
+        // Pass the exact 12-bit RGB data with no bit-shifting
+        IOWR(PIXEL_DAT_BASE, 0, (*src++) & 0x0FFF);
     }
 }
 
-// Write a quarter image to a specific quadrant of the pixel buffer
+// Write a quarter image to a specific quadrant using safe 16-bit reads
 void display_quad_image(uint16_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
 {
-    uint32_t* src32 = (uint32_t*)(&buffer[imageIndex * QUAD_IMAGE_SIZE]);
+    // Point directly to the start of the correct quadrant's array
+    uint16_t* src = &buffer[imageIndex * QUAD_IMAGE_SIZE];
     uint32_t pixelBufferAddr = 0;
 
-    if (displayIndex & 0x1)
-    {
-        pixelBufferAddr += QUAD_IMAGE_WIDTH;
-    }
-    if (displayIndex & 0x2)
-    {
-        pixelBufferAddr += 2 * QUAD_IMAGE_SIZE;
-    }
+    // Calculate quadrant offset
+    if (displayIndex & 0x1) pixelBufferAddr += QUAD_IMAGE_WIDTH;
+    if (displayIndex & 0x2) pixelBufferAddr += 2 * QUAD_IMAGE_SIZE;
 
+    // Loop through row by row
     for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++) {
-        for (uint32_t j = 0; j < (QUAD_IMAGE_WIDTH / 2); j++) {
-            uint32_t block = *src32++;
+        for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++) {
 
             IOWR(IMG_ADDY_BASE, 0, pixelBufferAddr++);
-            IOWR(PIXEL_DAT_BASE, 0, block & 0x0FFF);
+            IOWR(PIXEL_DAT_BASE, 0, (*src++) & 0x0FFF);
 
-            IOWR(IMG_ADDY_BASE, 0, pixelBufferAddr++);
-            IOWR(PIXEL_DAT_BASE, 0, (block >> 16) & 0x0FFF);
         }
+        // Jump the pixel address to the next row of the quadrant
         pixelBufferAddr += IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
     }
 }
