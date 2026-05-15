@@ -1,9 +1,13 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include "system.h"
 #include "io.h"
 #include "sys/alt_irq.h"
 #include <stdlib.h>
+
+// Benchmarking: print averages every N frames to reduce JTAG UART overhead
+#define BENCH_INTERVAL 20
 
 #include "common_defs.h"
 #include "memory_addresses.h"
@@ -218,6 +222,21 @@ int main() {
     int currently_displaying = -1;
     uint32_t last_frame_time = 0;
 
+    // ---- Benchmarking accumulators ----
+    // Accumulate over BENCH_INTERVAL frames, then print averages
+    uint32_t bench_count  = 0;
+    uint32_t sum_total    = 0;   // processing + display combined
+    uint32_t sum_process  = 0;   // processing only
+    uint32_t sum_display  = 0;   // display only
+    uint32_t sum_frame    = 0;   // frame-to-frame interval
+    // Quad-mode per-step breakdown
+    uint32_t sum_flip = 0;
+    uint32_t sum_blur = 0;
+    uint32_t sum_edge = 0;
+
+    printf("Image Processing Core started\n");
+    printf("Benchmarking enabled: printing every %d frames\n\n", BENCH_INTERVAL);
+
     alt_ic_isr_register(
         DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID,
         DATA_MAILBOX_IRQ,
@@ -236,11 +255,13 @@ int main() {
         if (new_frame_ready) {
             new_frame_ready = 0;
 
-            // Calculate the time it took since the last frame was delivered
+            // ---- Frame-to-frame timing ----
             uint32_t current_time = IORD(USEC_COUNTER_BASE, 0);
+            uint32_t frameTime = 0;
             if (last_frame_time != 0) {
-                uint32_t frameTime = current_time - last_frame_time;
+                frameTime = current_time - last_frame_time;
                 display_fps(frameTime);
+                sum_frame += frameTime;
             }
             last_frame_time = current_time;
 
@@ -257,57 +278,171 @@ int main() {
             uint8_t isQuad = shared_display->isQuad;
             int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
 
+            // ---- Timing variables ----
+            uint32_t t_total_start, t_step, t_disp_start;
+            uint32_t total_time = 0;
+            uint32_t proc_time  = 0;
+            uint32_t disp_time  = 0;
+            uint32_t flip_time = 0, blur_time = 0, edge_time = 0;
+
             if (isQuad)
             {
-                // Quad mode: one quarter image received, process 4 ways
+                // ================================================
+                // QUAD MODE: process all 4 images then display all
+                // Measures: total time from start of processing
+                //           to end of pixel buffer writes
+                // ================================================
+                t_total_start = IORD(USEC_COUNTER_BASE, 0);
 
-                // Slot 0: raw
+                // Slot 0: raw (memcpy)
                 memcpy(processing_buffer, source, QUAD_IMAGE_SIZE);
 
                 // Slot 1: flip
+                t_step = IORD(USEC_COUNTER_BASE, 0);
                 process_flip(source,
                              processing_buffer + QUAD_IMAGE_SIZE,
                              QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
+                flip_time = IORD(USEC_COUNTER_BASE, 0) - t_step;
 
                 // Slot 2: blur
+                t_step = IORD(USEC_COUNTER_BASE, 0);
                 box_blur(source,
                          processing_buffer + 2 * QUAD_IMAGE_SIZE,
                          QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+                blur_time = IORD(USEC_COUNTER_BASE, 0) - t_step;
 
                 // Slot 3: edge
+                t_step = IORD(USEC_COUNTER_BASE, 0);
                 sobel_edge_detection(source,
                                      processing_buffer + 3 * QUAD_IMAGE_SIZE,
                                      QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+                edge_time = IORD(USEC_COUNTER_BASE, 0) - t_step;
 
-                // Display each quadrant using indices controlled by Core 0 double-tap
+                proc_time = IORD(USEC_COUNTER_BASE, 0) - t_total_start;
+
+                // Display all 4 quadrants
+                t_disp_start = IORD(USEC_COUNTER_BASE, 0);
                 display_quad_image(processing_buffer, shared_display->quadDisplayIndices[0], 0);
                 display_quad_image(processing_buffer, shared_display->quadDisplayIndices[1], 1);
                 display_quad_image(processing_buffer, shared_display->quadDisplayIndices[2], 2);
                 display_quad_image(processing_buffer, shared_display->quadDisplayIndices[3], 3);
+                disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp_start;
+
+                total_time = IORD(USEC_COUNTER_BASE, 0) - t_total_start;
+
+                sum_flip += flip_time;
+                sum_blur += blur_time;
+                sum_edge += edge_time;
             }
             else
             {
-                // Full mode: SW[2:1] selects processing
+                // ================================================
+                // SINGLE MODE: process one image then display it
+                // Measures: total time from start of processing
+                //           to end of pixel buffer write
+                // ================================================
+                t_total_start = IORD(USEC_COUNTER_BASE, 0);
+
                 switch (processMode) {
                     case PROC_FLIP:
                         process_flip(source, processing_buffer,
                                      IMAGE_WIDTH, IMAGE_HEIGHT, 1);
+                        proc_time = IORD(USEC_COUNTER_BASE, 0) - t_total_start;
+                        t_disp_start = IORD(USEC_COUNTER_BASE, 0);
                         display_full_image(processing_buffer);
+                        disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp_start;
                         break;
                     case PROC_BLUR:
                         box_blur(source, processing_buffer,
                                  IMAGE_WIDTH, IMAGE_HEIGHT);
+                        proc_time = IORD(USEC_COUNTER_BASE, 0) - t_total_start;
+                        t_disp_start = IORD(USEC_COUNTER_BASE, 0);
                         display_full_image(processing_buffer);
+                        disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp_start;
                         break;
                     case PROC_EDGE:
                         sobel_edge_detection(source, processing_buffer,
                                              IMAGE_WIDTH, IMAGE_HEIGHT);
+                        proc_time = IORD(USEC_COUNTER_BASE, 0) - t_total_start;
+                        t_disp_start = IORD(USEC_COUNTER_BASE, 0);
                         display_full_image(processing_buffer);
+                        disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp_start;
                         break;
                     default: // PROC_RAW
+                        proc_time = 0;
+                        t_disp_start = IORD(USEC_COUNTER_BASE, 0);
                         display_full_image(source);
+                        disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp_start;
                         break;
                 }
+
+                total_time = IORD(USEC_COUNTER_BASE, 0) - t_total_start;
+            }
+
+            // ---- Accumulate benchmarking data ----
+            sum_total   += total_time;
+            sum_process += proc_time;
+            sum_display += disp_time;
+            bench_count++;
+
+            // ---- Print averages every BENCH_INTERVAL frames ----
+            if (bench_count >= BENCH_INTERVAL) {
+                uint32_t avg_total = sum_total   / bench_count;
+                uint32_t avg_proc  = sum_process / bench_count;
+                uint32_t avg_disp  = sum_display / bench_count;
+                uint32_t avg_frame = sum_frame   / bench_count;
+
+                // Calculate FPS from the total processing+display time
+                uint32_t fps_whole = avg_total > 0 ? 1000000 / avg_total : 0;
+                uint32_t fps_frac  = avg_total > 0 ? (100000000 / avg_total) % 100 : 0;
+
+                if (isQuad) {
+                    uint32_t avg_flip = sum_flip / bench_count;
+                    uint32_t avg_blur = sum_blur / bench_count;
+                    uint32_t avg_edge = sum_edge / bench_count;
+
+                    printf("===================================================\n");
+                    printf("  Display 4 video frames in quad-image mode\n");
+                    printf("===================================================\n");
+                    printf("  Per-step breakdown:\n");
+                    printf("    Flip:         %lu us\n", avg_flip);
+                    printf("    Blur:         %lu us\n", avg_blur);
+                    printf("    Edge:         %lu us\n", avg_edge);
+                    printf("  Processing:     %lu us\n", avg_proc);
+                    printf("  Display:        %lu us\n", avg_disp);
+                    printf("  -------------------------------------------\n");
+                    printf("  Total time:     %lu us\n", avg_total);
+                    printf("  FPS:            %lu.%02lu\n", fps_whole, fps_frac);
+                    printf("  Frame interval: %lu us\n\n", avg_frame);
+                } else {
+                    const char* task_desc;
+                    switch (processMode) {
+                        case PROC_FLIP: task_desc = "Display a flipped video frame in single-image mode"; break;
+                        case PROC_BLUR: task_desc = "Display a blurred video frame in single-image mode"; break;
+                        case PROC_EDGE: task_desc = "Display an edge-detected video frame in single-image mode"; break;
+                        default:        task_desc = "Display an unaltered video frame in single-image mode"; break;
+                    }
+
+                    printf("===================================================\n");
+                    printf("  %s\n", task_desc);
+                    printf("===================================================\n");
+                    printf("  Processing:     %lu us\n", avg_proc);
+                    printf("  Display:        %lu us\n", avg_disp);
+                    printf("  -------------------------------------------\n");
+                    printf("  Total time:     %lu us\n", avg_total);
+                    printf("  FPS:            %lu.%02lu\n", fps_whole, fps_frac);
+                    printf("  Frame interval: %lu us\n\n", avg_frame);
+                }
+
+                // Reset accumulators
+                bench_count = 0;
+                sum_total   = 0;
+                sum_process = 0;
+                sum_display = 0;
+                sum_frame   = 0;
+                sum_flip    = 0;
+                sum_blur    = 0;
+                sum_edge    = 0;
             }
         }
     }
