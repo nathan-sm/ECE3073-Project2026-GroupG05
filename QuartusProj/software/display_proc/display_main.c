@@ -181,11 +181,15 @@ int main()
 
 		if (bench_count >= BENCH_INTERVAL) {
 			uint32_t avgFrameRead = timingDataSums.frameReadTime / bench_count;
+
 			uint32_t avgNoFilterTime = timingDataSums.noFilterTime / bench_count;
 			uint32_t avgFlip = timingDataSums.flipTime / bench_count;
 			uint32_t avgBlur = timingDataSums.blurTime / bench_count;
 			uint32_t avgSobel = timingDataSums.sobelTime / bench_count;
+			uint32_t avgFilterTime = avgNoFilterTime + avgFlip + avgBlur + avgSobel;
+
 			uint32_t avgDisplay = timingDataSums.displayTime / bench_count;
+
 			uint32_t avgFrameTime = timingDataSums.frameTime / bench_count;
 
 			uint32_t fps_whole = avgFrameTime > 0 ? 1000000 / avgFrameTime : 0;
@@ -203,6 +207,7 @@ int main()
 			printf("    - Flip: %lu us\n", avgFlip);
 			printf("    - Blur: %lu us\n", avgBlur);
 			printf("    - Sobel: %lu us\n", avgSobel);
+			printf("  Total: %lu us\n", avgFilterTime);
 			printf("\n");
 
 			printf("  Display:        %lu us\n", avgDisplay);
