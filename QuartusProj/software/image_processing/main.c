@@ -31,6 +31,8 @@ uint8_t *processing_buffers[] = {
 		(uint8_t*)(PROCESSED_IMG_BUF_B)
 };
 
+SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
+
 volatile int new_frame_ready = 0;
 volatile uint32_t current_frame_index = 0;
 
@@ -150,6 +152,11 @@ int main() {
 
     IOWR(DATA_MAILBOX_BASE, 3, 0x01);
 
+    sharedTimingData->noFilterTime = 0;
+    sharedTimingData->flipTime = 0;
+    sharedTimingData->blurTime = 0;
+    sharedTimingData->sobelTime = 0;
+
 	printf("Img proc init.\n");
 
     while(1) {
@@ -179,29 +186,42 @@ int main() {
 			// Quad mode: one quarter image received, process 4 ways
 
 			// Slot 0: raw
+			uint32_t noFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			for (size_t i = 0; i < QUAD_IMAGE_SIZE; i++)
 			{
 				processing_buffer[i] = source[i];
 			}
+			uint32_t noFilterEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->noFilterTime = noFilterEndTime - noFilterBeginTime;
 
 			// Slot 1: flip
+			uint32_t flipBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			process_flip(source,
 						 processing_buffer + QUAD_IMAGE_SIZE,
 						 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
+			uint32_t flipEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->flipTime = flipEndTime - flipBeginTime;
 
 			// Slot 2: blur
+			uint32_t blurBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			box_blur(source,
 					 processing_buffer + 2 * QUAD_IMAGE_SIZE,
 					 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+			uint32_t blurEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->blurTime = blurEndTime - blurBeginTime;
 
 			// Slot 3: edge
+			uint32_t sobelBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			sobel_edge_detection(source,
 								 processing_buffer + 3 * QUAD_IMAGE_SIZE,
 								 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+			uint32_t sobelEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->sobelTime = sobelEndTime - sobelBeginTime;
 		}
 		else
 		{
 			// Full mode: SW[2:1] selects processing
+			uint32_t fullFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			switch (processMode) {
 				case PROC_FLIP:
 					process_flip(source, processing_buffer,
@@ -222,6 +242,29 @@ int main() {
 						processing_buffer[i] = source[i];
 					}
 					break;
+			}
+			uint32_t fullFilterEndTime = IORD(USEC_COUNTER_BASE, 0);
+
+			sharedTimingData->noFilterTime = 0;
+			sharedTimingData->flipTime = 0;
+			sharedTimingData->blurTime = 0;
+			sharedTimingData->sobelTime = 0;
+
+			uint32_t fullFilterTime = fullFilterEndTime - fullFilterBeginTime;
+			switch (processMode)
+			{
+			case PROC_RAW:
+				sharedTimingData->noFilterTime = fullFilterTime;
+				break;
+			case PROC_FLIP:
+				sharedTimingData->flipTime = fullFilterTime;
+				break;
+			case PROC_BLUR:
+				sharedTimingData->blurTime = fullFilterTime;
+				break;
+			case PROC_EDGE:
+				sharedTimingData->sobelTime = fullFilterTime;
+				break;
 			}
 		}
 

@@ -4,7 +4,7 @@
  * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Fri May 15 12:27:01 EST 2026
+ * Generated: Fri May 15 14:31:45 EST 2026
  */
 
 /*
@@ -165,19 +165,19 @@
 #define ALT_NUM_INTERNAL_INTERRUPT_CONTROLLERS 1
 #define ALT_NUM_INTERRUPT_CONTROLLERS 1
 #define ALT_STDERR "/dev/image_jtag"
-#define ALT_STDERR_BASE 0x4001090
+#define ALT_STDERR_BASE 0x40010a0
 #define ALT_STDERR_DEV image_jtag
 #define ALT_STDERR_IS_JTAG_UART
 #define ALT_STDERR_PRESENT
 #define ALT_STDERR_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDIN "/dev/image_jtag"
-#define ALT_STDIN_BASE 0x4001090
+#define ALT_STDIN_BASE 0x40010a0
 #define ALT_STDIN_DEV image_jtag
 #define ALT_STDIN_IS_JTAG_UART
 #define ALT_STDIN_PRESENT
 #define ALT_STDIN_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDOUT "/dev/image_jtag"
-#define ALT_STDOUT_BASE 0x4001090
+#define ALT_STDOUT_BASE 0x40010a0
 #define ALT_STDOUT_DEV image_jtag
 #define ALT_STDOUT_IS_JTAG_UART
 #define ALT_STDOUT_PRESENT
@@ -190,7 +190,7 @@
  *
  */
 
-#define ACK_MAILBOX_BASE 0x4001070
+#define ACK_MAILBOX_BASE 0x4001080
 #define ACK_MAILBOX_IRQ -1
 #define ACK_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define ACK_MAILBOX_NAME "/dev/ack_mailbox"
@@ -204,7 +204,7 @@
  *
  */
 
-#define ALTPLL_0_BASE 0x4001050
+#define ALTPLL_0_BASE 0x4001060
 #define ALTPLL_0_IRQ -1
 #define ALTPLL_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define ALTPLL_0_NAME "/dev/altpll_0"
@@ -219,7 +219,7 @@
  */
 
 #define ALT_MODULE_CLASS_data_mailbox altera_avalon_mailbox_simple
-#define DATA_MAILBOX_BASE 0x4001080
+#define DATA_MAILBOX_BASE 0x4001090
 #define DATA_MAILBOX_IRQ 0
 #define DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define DATA_MAILBOX_NAME "/dev/data_mailbox"
@@ -233,7 +233,7 @@
  */
 
 #define ALT_MODULE_CLASS_display_frame_mailbox altera_avalon_mailbox_simple
-#define DISPLAY_FRAME_MAILBOX_BASE 0x4001060
+#define DISPLAY_FRAME_MAILBOX_BASE 0x4001070
 #define DISPLAY_FRAME_MAILBOX_IRQ -1
 #define DISPLAY_FRAME_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define DISPLAY_FRAME_MAILBOX_NAME "/dev/display_frame_mailbox"
@@ -258,7 +258,7 @@
  */
 
 #define ALT_MODULE_CLASS_hex20 altera_avalon_pio
-#define HEX20_BASE 0x4001010
+#define HEX20_BASE 0x4001000
 #define HEX20_BIT_CLEARING_EDGE_REGISTER 0
 #define HEX20_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define HEX20_CAPTURE 0
@@ -285,7 +285,7 @@
  */
 
 #define ALT_MODULE_CLASS_hex53 altera_avalon_pio
-#define HEX53_BASE 0x4001030
+#define HEX53_BASE 0x4001010
 #define HEX53_BIT_CLEARING_EDGE_REGISTER 0
 #define HEX53_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define HEX53_CAPTURE 0
@@ -312,7 +312,7 @@
  */
 
 #define ALT_MODULE_CLASS_image_jtag altera_avalon_jtag_uart
-#define IMAGE_JTAG_BASE 0x4001090
+#define IMAGE_JTAG_BASE 0x40010a0
 #define IMAGE_JTAG_IRQ 1
 #define IMAGE_JTAG_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define IMAGE_JTAG_NAME "/dev/image_jtag"
@@ -330,7 +330,7 @@
  */
 
 #define ALT_MODULE_CLASS_key altera_avalon_pio
-#define KEY_BASE 0x4001000
+#define KEY_BASE 0x4001040
 #define KEY_BIT_CLEARING_EDGE_REGISTER 0
 #define KEY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define KEY_CAPTURE 0
@@ -357,7 +357,7 @@
  */
 
 #define ALT_MODULE_CLASS_ledr altera_avalon_pio
-#define LEDR_BASE 0x4001040
+#define LEDR_BASE 0x4001050
 #define LEDR_BIT_CLEARING_EDGE_REGISTER 0
 #define LEDR_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define LEDR_CAPTURE 0
@@ -423,7 +423,7 @@
  */
 
 #define ALT_MODULE_CLASS_sw altera_avalon_pio
-#define SW_BASE 0x4001020
+#define SW_BASE 0x4001030
 #define SW_BIT_CLEARING_EDGE_REGISTER 0
 #define SW_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define SW_CAPTURE 0
@@ -442,5 +442,32 @@
 #define SW_RESET_VALUE 0
 #define SW_SPAN 16
 #define SW_TYPE "altera_avalon_pio"
+
+
+/*
+ * usec_counter configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_usec_counter altera_avalon_pio
+#define USEC_COUNTER_BASE 0x4001020
+#define USEC_COUNTER_BIT_CLEARING_EDGE_REGISTER 0
+#define USEC_COUNTER_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define USEC_COUNTER_CAPTURE 0
+#define USEC_COUNTER_DATA_WIDTH 32
+#define USEC_COUNTER_DO_TEST_BENCH_WIRING 0
+#define USEC_COUNTER_DRIVEN_SIM_VALUE 0
+#define USEC_COUNTER_EDGE_TYPE "NONE"
+#define USEC_COUNTER_FREQ 50000000
+#define USEC_COUNTER_HAS_IN 1
+#define USEC_COUNTER_HAS_OUT 0
+#define USEC_COUNTER_HAS_TRI 0
+#define USEC_COUNTER_IRQ -1
+#define USEC_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define USEC_COUNTER_IRQ_TYPE "NONE"
+#define USEC_COUNTER_NAME "/dev/usec_counter"
+#define USEC_COUNTER_RESET_VALUE 0
+#define USEC_COUNTER_SPAN 16
+#define USEC_COUNTER_TYPE "altera_avalon_pio"
 
 #endif /* __SYSTEM_H_ */

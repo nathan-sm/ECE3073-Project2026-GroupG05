@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 15, 2026 1:01:57 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778814117355</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>May 15, 2026 2:31:48 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778819508633</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/display_proc_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
@@ -929,25 +929,25 @@
                 <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>usec_counter</slaveDescriptor>
+                <slaveDescriptor>hex20</slaveDescriptor>
                 <addressRange>0x04001000 - 0x0400100F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>hex20</slaveDescriptor>
+                <slaveDescriptor>hex53</slaveDescriptor>
                 <addressRange>0x04001010 - 0x0400101F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>sw</slaveDescriptor>
+                <slaveDescriptor>usec_counter</slaveDescriptor>
                 <addressRange>0x04001020 - 0x0400102F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>hex53</slaveDescriptor>
+                <slaveDescriptor>sw</slaveDescriptor>
                 <addressRange>0x04001030 - 0x0400103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
