@@ -40,9 +40,9 @@ uint8_t* buffers[3] = {
     (uint8_t*)(IMAGE_READ_BUF_C)
 };
 
-// Shared structs mapped to uncached SDRAM aliases so both cores see writes immediately
-SharedAccelData* sharedAccel = (SharedAccelData*)(SHARED_ACCEL_DATA | UNCACHED_MEM_MASK);
-SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE | UNCACHED_MEM_MASK);
+// Map the structs to SDRAM right after the 3 image buffers
+SharedAccelData* sharedAccel = (SharedAccelData*)(SHARED_ACCEL_DATA);
+SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 
 // 1 = buffer is free for writing, 0 = buffer is locked by the image processing core
 volatile int freeBuffers[3] = {1, 1, 1};
@@ -87,6 +87,8 @@ void doubletap_handler() {
 // the slot index to the image processing core via mailbox.
 // @return 0 (loop runs indefinitely)
 int main() {
+	printf("Comms main\n");
+
     accel_setup();
     gyro_set_dtap_callback(&doubletap_handler);
 
@@ -111,8 +113,17 @@ int main() {
     uint8_t startupCmd = CAM_WRITE_MASK;
     alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startupCmd, 0, NULL, 0);
 
-    while (1) {
-        // Find a free, unused buffer slot
+    printf("Comms init\n");
+
+    while(1) {
+        // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
+        while (IORD(CAM_REDY_BASE, 0) == 0);
+
+        // Update shared quad mode flag from switches each iteration
+        // Core 0 reads this to know what frame size to request
+        sharedDisplay->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
+
+        // 1. Find a safe, unused buffer
         int writeTarget = -1;
         for (int i = 0; i < 3; i++) {
             if (freeBuffers[i]) {
@@ -125,10 +136,7 @@ int main() {
             continue;
         }
 
-        // Spin until the ESP-CAM signals it is ready (GPIO[2] high)
-        while (IORD(CAM_REDY_BASE, 0) == 0);
-
-        freeBuffers[writeTarget] = 0; // lock buffer while receiving frame
+        freeBuffers[writeTarget] = 0; // Lock buffer
 
         // Check quad mode (set by the image processing core reading SW[0])
         bool isQuad = sharedDisplay->isQuad;
@@ -141,7 +149,8 @@ int main() {
         }
 
         uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
-        uint8_t* destPtr = (uint8_t*)((uint32_t)buffers[writeTarget] | UNCACHED_MEM_MASK);
+        uint8_t* destPtr = (uint8_t*)((uint32_t)buffers[writeTarget]);
+//        uint8_t* dest_ptr = (uint8_t*)(buffers[0]);
 
         alt_avalon_spi_command(
             SPI_0_BASE,
@@ -161,8 +170,11 @@ int main() {
         sharedAccel->y = currentRot.yAxis;
         sharedAccel->z = currentRot.zAxis;
 
-        // Send the completed buffer index to the image processing core
-        while (IORD(DATA_MAILBOX_BASE, 2) & MAILBOX_STATUS_FULL);
+//        printf("Sent frame to image proc at addr %d\n", (int)dest_ptr);
+//		printf("Pixel value at 1 0: %d\n", dest_ptr[1]);
+
+        // 5. Send the finished buffer token to the Image CPU
+        while (IORD(DATA_MAILBOX_BASE, 2) & 0x02);
         IOWR(DATA_MAILBOX_BASE, 0, writeTarget);
     }
     return 0;
