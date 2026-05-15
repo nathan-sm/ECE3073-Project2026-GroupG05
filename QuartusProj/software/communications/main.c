@@ -19,8 +19,8 @@ uint8_t* buffers[3] = {
 };
 
 // Map the structs to SDRAM right after the 3 image buffers
-SharedAccelData* shared_accel = (SharedAccelData*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE)) | 0x80000000);
-SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
+SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
+SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 
 // Global flags
 volatile int free_buffers[3] = {1, 1, 1}; // 1 = free, 0 = in use
@@ -67,6 +67,8 @@ void doubletap_handler()
 }
 
 int main() {
+	printf("Comms main\n");
+
     accel_setup();
     gyro_set_dtap_callback(&doubletap_handler);
 
@@ -91,7 +93,16 @@ int main() {
     uint8_t startup_cmd = CAM_WRITE_MASK;
     alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, 0, NULL, 0);
 
+    printf("Comms init\n");
+
     while(1) {
+        // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
+        while (IORD(CAM_REDY_BASE, 0) == 0);
+
+        // Update shared quad mode flag from switches each iteration
+        // Core 0 reads this to know what frame size to request
+        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
+
         // 1. Find a safe, unused buffer
         int write_target = -1;
         for (int i = 0; i < 3; i++) {
@@ -104,9 +115,6 @@ int main() {
         if (write_target == -1) {
             continue;
         }
-
-        // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
-        while (IORD(CAM_REDY_BASE, 0) == 0);
 
         free_buffers[write_target] = 0; // Lock buffer
 
@@ -121,7 +129,8 @@ int main() {
         }
 
         uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
-        uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target] | 0x80000000);
+        uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
+//        uint8_t* dest_ptr = (uint8_t*)(buffers[0]);
 
         alt_avalon_spi_command(
             SPI_0_BASE,
@@ -140,6 +149,9 @@ int main() {
         shared_accel->x = current_rot.x_axis;
         shared_accel->y = current_rot.y_axis;
         shared_accel->z = current_rot.z_axis;
+
+//        printf("Sent frame to image proc at addr %d\n", (int)dest_ptr);
+//		printf("Pixel value at 1 0: %d\n", dest_ptr[1]);
 
         // 5. Send the finished buffer token to the Image CPU
         while (IORD(DATA_MAILBOX_BASE, 2) & 0x02);

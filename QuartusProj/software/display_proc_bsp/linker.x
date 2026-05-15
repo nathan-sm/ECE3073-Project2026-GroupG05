@@ -1,10 +1,10 @@
 /*
  * linker.x - Linker script
  *
- * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'display_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Fri May 15 12:27:01 EST 2026
+ * Generated: Fri May 15 12:19:49 EST 2026
  */
 
 /*
@@ -51,8 +51,8 @@
 MEMORY
 {
     sdram_control_BEFORE_RESET : ORIGIN = 0x0, LENGTH = 131072
-    reset : ORIGIN = 0x20000, LENGTH = 32
-    sdram_control : ORIGIN = 0x20020, LENGTH = 131040
+    reset : ORIGIN = 0x40000, LENGTH = 32
+    sdram_control : ORIGIN = 0x40020, LENGTH = 131040
 }
 
 /* Define symbols for each memory base-address */
@@ -368,7 +368,7 @@ SECTIONS
 /*
  * Don't override this, override the __alt_stack_* symbols instead.
  */
-__alt_data_end = 0x40000;
+__alt_data_end = 0x60000;
 
 /*
  * The next two symbols define the location of the default stack.  You can
@@ -384,4 +384,4 @@ PROVIDE( __alt_stack_limit   = __alt_stack_base );
  * Override this symbol to put the heap in a different memory.
  */
 PROVIDE( __alt_heap_start    = end );
-PROVIDE( __alt_heap_limit    = 0x40000 );
+PROVIDE( __alt_heap_limit    = 0x60000 );

@@ -1,6 +1,8 @@
 #ifndef COMMON_DEFS_H
 #define COMMON_DEFS_H
 
+#include "stdint.h"
+
 #define IMAGE_WIDTH 320
 #define IMAGE_HEIGHT 240
 #define IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)

@@ -2,13 +2,13 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 15, 2026 12:34:25 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778812465806</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/communications_bsp</BspGeneratedLocation>
+        <BspGeneratedTimeStamp>May 15, 2026 12:27:17 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778812037090</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/display_proc_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
-        <Cpu>comms_proc</Cpu>
+        <Cpu>display_proc</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
         <Setting>
                 <SettingName>hal.sys_clk_timer</SettingName>
@@ -194,7 +194,7 @@
                 <SettingName>hal.stdin</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>comms_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDIN character-mode device. This setting is used by the ALT_STDIN family of defines in system.h.</Description>
@@ -206,7 +206,7 @@
                 <SettingName>hal.stdout</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>comms_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDOUT character-mode device. This setting is used by the ALT_STDOUT family of defines in system.h.</Description>
@@ -218,7 +218,7 @@
                 <SettingName>hal.stderr</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>comms_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDERR character-mode device. This setting is used by the ALT_STDERR family of defines in system.h.</Description>
@@ -794,7 +794,7 @@
                 <SettingName>hal.enable_reduced_device_drivers</SettingName>
                 <Identifier>ALT_USE_SMALL_DRIVERS</Identifier>
                 <Type>Boolean</Type>
-                <Value>1</Value>
+                <Value>0</Value>
                 <DefaultValue>0</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Certain drivers are compiled with reduced functionality to reduce code footprint. Not all drivers observe this setting. The altera_avalon_uart and altera_avalon_jtag_uart drivers switch from interrupt-driven to polled operation. CAUTION: Several device drivers are disabled entirely. These include the altera_avalon_cfi_flash, altera_avalon_epcs_flash_controller, and altera_avalon_lcd_16207 drivers. This can result in certain API (HAL flash access routines) to fail. You can define a symbol provided by each driver to prevent it from being removed. If true, adds -DALT_USE_SMALL_DRIVERS to ALT_CPPFLAGS in public.mk.</Description>
@@ -890,7 +890,7 @@
                 <SettingName>altera_avalon_jtag_uart_driver.enable_jtag_uart_ignore_fifo_full_error</SettingName>
                 <Identifier>ALTERA_AVALON_JTAG_UART_IGNORE_FIFO_FULL_ERROR</Identifier>
                 <Type>BooleanDefineOnly</Type>
-                <Value>true</Value>
+                <Value>false</Value>
                 <DefaultValue>false</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Enable JTAG UART driver to recover when host is inactive causing buffer to full without returning error. Printf will not fail with this recovery.</Description>
@@ -898,6 +898,30 @@
                 <Enabled>false</Enabled>
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
+        <LinkerRegion>
+                <regionName>sdram_control_BEFORE_RESET</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>0</offset>
+                <size>131072</size>
+                <baseAddress>0x0</baseAddress>
+                <addressRange>0x00000000 - 0x0001FFFF</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>reset</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>262144</offset>
+                <size>32</size>
+                <baseAddress>0x40000</baseAddress>
+                <addressRange>0x00040000 - 0x0004001F</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>sdram_control</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>262176</offset>
+                <size>131040</size>
+                <baseAddress>0x40020</baseAddress>
+                <addressRange>0x00040020 - 0x0005FFFF</addressRange>
+        </LinkerRegion>
         <MemoryMap>
                 <slaveDescriptor>sdram_control</slaveDescriptor>
                 <addressRange>0x00000000 - 0x03FFFFFF</addressRange>
@@ -905,9 +929,15 @@
                 <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>spi_0</slaveDescriptor>
-                <addressRange>0x04001000 - 0x0400101F</addressRange>
-                <addressSpan>32</addressSpan>
+                <slaveDescriptor>usec_counter</slaveDescriptor>
+                <addressRange>0x04001000 - 0x0400100F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>hex20</slaveDescriptor>
+                <addressRange>0x04001010 - 0x0400101F</addressRange>
+                <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
@@ -917,38 +947,32 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>cam_redy</slaveDescriptor>
+                <slaveDescriptor>hex53</slaveDescriptor>
                 <addressRange>0x04001030 - 0x0400103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <slaveDescriptor>pixel_dat</slaveDescriptor>
                 <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <slaveDescriptor>img_addy</slaveDescriptor>
                 <addressRange>0x04001050 - 0x0400105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>data_mailbox</slaveDescriptor>
+                <slaveDescriptor>display_frame_mailbox</slaveDescriptor>
                 <addressRange>0x04001060 - 0x0400106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>ack_mailbox</slaveDescriptor>
-                <addressRange>0x04001070 - 0x0400107F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>comms_jtag</slaveDescriptor>
-                <addressRange>0x04001080 - 0x04001087</addressRange>
+                <slaveDescriptor>display_jtag</slaveDescriptor>
+                <addressRange>0x04001070 - 0x04001077</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>
