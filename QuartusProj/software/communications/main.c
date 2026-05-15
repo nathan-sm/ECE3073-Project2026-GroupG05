@@ -8,31 +8,15 @@
 #include "altera_avalon_spi.h"
 #include "accelerometer.h"
 
-// --- Shared Memory Configuration ---
-#define SHARED_MEM_BASE (SDRAM_CONTROL_BASE + 0x01000000)
-#define IMAGE_SIZE 76800
-#define QUAD_IMAGE_SIZE 19200
+#include "common_defs.h"
+#include "memory_addresses.h"
 
 // Triple Buffer Pointers
 uint8_t* buffers[3] = {
-    (uint8_t*)(SHARED_MEM_BASE),
-    (uint8_t*)(SHARED_MEM_BASE + IMAGE_SIZE),
-    (uint8_t*)(SHARED_MEM_BASE + (2 * IMAGE_SIZE))
+    (uint8_t*)(IMAGE_READ_BUF_A),
+    (uint8_t*)(IMAGE_READ_BUF_B),
+    (uint8_t*)(IMAGE_READ_BUF_C)
 };
-
-// Struct to hold the accelerometer data safely
-typedef struct {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-} SharedAccelData;
-
-// Shared display state between cores
-typedef struct {
-    volatile uint8_t isQuad;           // Core 1 writes (from SW[0]), Core 0 reads
-    volatile uint8_t _pad[3];
-    volatile uint32_t quadDisplayIndices[4]; // Core 0 writes (double-tap), Core 1 reads
-} SharedDisplayState;
 
 // Map the structs to SDRAM right after the 3 image buffers
 SharedAccelData* shared_accel = (SharedAccelData*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE)) | 0x80000000);
@@ -129,7 +113,7 @@ int main() {
         // 2. Check quad mode (set by Core 1 from SW[0])
         bool isQuad = shared_display->isQuad;
 
-        // 3. Build camera command — only set WRITE_MASK when config changes
+        // 3. Build camera command ï¿½ only set WRITE_MASK when config changes
         uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
         if (cmd != g_camLastConfig) {
             g_camLastConfig = cmd;

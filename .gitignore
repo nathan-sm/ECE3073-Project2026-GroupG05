@@ -110,7 +110,7 @@ synthesis
 # software/*_bsp/*
 # software/*/.settings/
 # software/*/.cproject
-software/*/.force_relink
+# software/*/.force_relink
 # software/*/.project
 # software/*/create-this-app
 # software/*/Makefile
