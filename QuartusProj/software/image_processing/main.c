@@ -1,3 +1,12 @@
+// Image processing Nios II core — receives frame buffer tokens from the communications
+// core, applies the selected processing mode, and writes pixels to the VGA pixel buffer.
+// Created By: Nathan Morris       (32532601)
+//             Ritwam Shohaum      (33156816)
+//             Shuk Kan LUI        (33891885)
+//             Evgeny Solomin      (34977260)
+// Created Date: 2026
+// version = '1.0'
+
 #include <stdint.h>
 #include <string.h>
 #include "system.h"
@@ -8,64 +17,80 @@
 #include "common_defs.h"
 #include "memory_addresses.h"
 
-// Processing modes (selected by SW[2:1])
+// Processing mode codes selected by SW[2:1]
 #define PROC_RAW   0
 #define PROC_FLIP  1
 #define PROC_BLUR  2
 #define PROC_EDGE  3
 
+// Mailbox register offsets
+#define MAILBOX_STATUS_FULL 0x02  // bit in the STATUS register indicating mailbox is full
+#define MAILBOX_IRQ_ENABLE  0x01  // value written to the IRQ enable register
+
+// Threshold used by Sobel edge detection to binarise gradient magnitude
+#define SOBEL_EDGE_THRESHOLD 60
+
+// Triple buffer base addresses in SDRAM (cached — read-only from this core's perspective)
 uint8_t* buffers[3] = {
     (uint8_t*)(IMAGE_READ_BUF_A),
     (uint8_t*)(IMAGE_READ_BUF_B),
     (uint8_t*)(IMAGE_READ_BUF_C)
 };
 
-SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
-SharedDisplayState* shared_display = (SharedDisplayState*)((SHARED_MEM_BASE + (3 * IMAGE_SIZE) + sizeof(SharedAccelData) + 8) | 0x80000000);
+SharedAccelData* sharedAccel = (SharedAccelData*)(SHARED_ACCEL_DATA);
+SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE | UNCACHED_MEM_MASK);
 
-// Processing output buffer � avoids writing into shared triple buffers
-uint8_t processing_buffer[IMAGE_SIZE];
+// Scratch buffer for processing output — avoids writing into the shared triple buffers
+uint8_t processingBuffer[IMAGE_SIZE];
 
-volatile int new_frame_ready = 0;
-volatile uint32_t current_frame_index = 0;
+volatile int newFrameReady = 0;
+volatile uint32_t currentFrameIndex = 0;
 
+// ISR: called when the communications core deposits a new frame buffer token
 static void mailbox_rx_isr(void* context) {
-    current_frame_index = IORD(DATA_MAILBOX_BASE, 0);
-    new_frame_ready = 1;
+    currentFrameIndex = IORD(DATA_MAILBOX_BASE, 0);
+    newFrameReady = 1;
 }
 
-// FPS DISPLAY FUNCTION
+// Writes the current FPS (derived from elapsed microseconds) to the 7-segment displays.
+// @param elapsed Microseconds elapsed since the previous frame was delivered
 void display_fps(uint32_t elapsed) {
-    if (elapsed == 0) return; // Prevent divide by zero on first frame
+    if (elapsed == 0) { return; } // prevent divide-by-zero on the first frame
 
-    uint32_t fps_100 = 100000000 / elapsed;
+    // Store 100x FPS so we can use integer arithmetic for the decimal digit
+    uint32_t fps100 = 100000000 / elapsed;
 
     const uint8_t SEG[10] = {
         0xC0, 0xF9, 0xA4, 0xB0, 0x99,
         0x92, 0x82, 0xF8, 0x80, 0x90
     };
 
-    int d3 = (fps_100 / 1000) % 10;
-    int d2 = (fps_100 / 100)  % 10;
-    int d1 = (fps_100 / 10)   % 10;
-    int d0 =  fps_100         % 10;
+    int d3 = (fps100 / 1000) % 10;
+    int d2 = (fps100 / 100)  % 10;
+    int d1 = (fps100 / 10)   % 10;
+    int d0 =  fps100         % 10;
 
     uint8_t hex3 = SEG[d3];
-    uint8_t hex2 = SEG[d2] & ~(1 << 7);
+    uint8_t hex2 = SEG[d2] & ~(1 << 7); // decimal point on HEX2
     uint8_t hex1 = SEG[d1];
     uint8_t hex0 = SEG[d0];
 
-    uint32_t hex0_2 = ((uint32_t)hex2 << 16) | ((uint32_t)hex1 << 8) | hex0;
-    uint32_t hex3_5 = (0xFF << 16) | (0xFF << 8) | hex3;
+    uint32_t hex02 = ((uint32_t)hex2 << 16) | ((uint32_t)hex1 << 8) | hex0;
+    uint32_t hex35 = ((uint32_t)HEX_BLANK << 16) | ((uint32_t)HEX_BLANK << 8) | hex3;
 
-    IOWR(HEX20_BASE, 0, hex0_2);
-    IOWR(HEX53_BASE, 0, hex3_5);
+    IOWR(HEX20_BASE, 0, hex02);
+    IOWR(HEX53_BASE, 0, hex35);
 }
 
 // ---- Image Processing Functions ----
 
-void process_flip(uint8_t *input, uint8_t *output, int width, int height, int bpp)
-{
+// Flips the image 180 degrees (reverses pixel order).
+// @param input   Source image buffer
+// @param output  Destination image buffer
+// @param width   Image width in pixels
+// @param height  Image height in pixels
+// @param bpp     Bytes per pixel
+void process_flip(uint8_t *input, uint8_t *output, int width, int height, int bpp) {
     int totalPixels = width * height;
     for (int i = 0; i < totalPixels; i++) {
         int srcIdx = (totalPixels - 1 - i) * bpp;
@@ -76,136 +101,137 @@ void process_flip(uint8_t *input, uint8_t *output, int width, int height, int bp
     }
 }
 
+// Applies a 3x3 convolution kernel to a greyscale image, skipping the 1-pixel border.
+// @param inputImage   Source greyscale buffer
+// @param outputImage  Destination greyscale buffer (border pixels are zeroed)
+// @param kernel       3x3 kernel stored in row-major order
+// @param width        Image width in pixels
+// @param height       Image height in pixels
 void convolve(uint8_t *inputImage, uint8_t *outputImage, int *kernel, int width, int height) {
-	// iterate through every row and column skipping the borders
-	for (int i = 1; i < height - 1; i++) {
-		for (int j = 1; j < width - 1; j++) {
-			// get the weighted pixel sum and kernel weight (normalisation)
-			int sum = 0;
-			int total_weight = 0;
+    for (int i = 1; i < height - 1; i++) {
+        for (int j = 1; j < width - 1; j++) {
+            int sum = 0;
+            int totalWeight = 0;
 
-			// looping over 3x3 neighbourhood around pixel (i,j)
-			for (int ki = -1; ki <= 1; ki++) {
-				for (int kj = -1; kj <= 1; kj++) {
-					// get neighbouring pixel value
-					int pixel = inputImage[(i + ki) * width + (j + kj)];
-					// get matching kernel weight (stored in row-major index)
-					int weight = kernel[(ki + 1) * 3 + (kj + 1)];
-					sum += pixel * weight;
-					total_weight += weight;
-				}
-			}
-			// avoid dividing by zero if kernel weights = 0
-			if (total_weight == 0) total_weight = 1;
-			// normalise
-			int result = sum / total_weight;
-			// restrict result to valid pixel range [0, 255]
-			if (result < 0) result = 0;
-			if (result > 255) result = 255;
-			// write the result to the output buffer
-			outputImage[i * width + j] = (uint8_t)result;
-		}
-	}
-	// border pixels zero, skipped by convolution loop, setting them to black
-	for (int x = 0; x < width; x++) outputImage[x] = 0;
-	for (int x = 0; x < width; x++) outputImage[(height-1)*width + x] = 0;
-	for (int y = 0; y < height; y++) outputImage[y*width] = 0;
-	for (int y = 0; y < height; y++) outputImage[y*width + (width - 1)] = 0;
+            for (int ki = -1; ki <= 1; ki++) {
+                for (int kj = -1; kj <= 1; kj++) {
+                    int pixel = inputImage[(i + ki) * width + (j + kj)];
+                    int weight = kernel[(ki + 1) * 3 + (kj + 1)];
+                    sum += pixel * weight;
+                    totalWeight += weight;
+                }
+            }
+
+            if (totalWeight == 0) { totalWeight = 1; } // prevent divide-by-zero for zero-sum kernels
+            int result = sum / totalWeight;
+            if (result < 0) { result = 0; }
+            if (result > 255) { result = 255; }
+            outputImage[i * width + j] = (uint8_t)result;
+        }
+    }
+
+    // Zero the border pixels that the convolution loop skips
+    for (int x = 0; x < width; x++) { outputImage[x] = 0; }
+    for (int x = 0; x < width; x++) { outputImage[(height - 1) * width + x] = 0; }
+    for (int y = 0; y < height; y++) { outputImage[y * width] = 0; }
+    for (int y = 0; y < height; y++) { outputImage[y * width + (width - 1)] = 0; }
 }
 
+// Applies a 3x3 box blur (uniform average) to a greyscale image.
+// @param input   Source greyscale buffer
+// @param output  Destination greyscale buffer
+// @param width   Image width in pixels
+// @param height  Image height in pixels
 void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
-	// 3x3 box kernel : all values = 1
-	// convolve will divide by total_weight = 9, giving average
-	int blur_kernel[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
-
-	// run a pass of convolution with box kernel
-	convolve(input, output, blur_kernel, width, height);
+    int blurKernel[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+    convolve(input, output, blurKernel, width, height);
 }
 
+// Applies Sobel edge detection and thresholds the result to a binary edge map.
+// @param input   Source greyscale buffer
+// @param output  Destination greyscale buffer
+// @param width   Image width in pixels
+// @param height  Image height in pixels
 void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height) {
-	// detecting vertical (Gx) and horizontal (Gy) edges
-	int kernel_x[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-	int kernel_y[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+    int kernelX[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
+    int kernelY[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
 
-	int threshold = 60;
+    for (int i = 1; i < height - 1; i++) {
+        for (int j = 1; j < width - 1; j++) {
+            int gx = 0;
+            int gy = 0;
 
-	for (int i = 1; i < height - 1; i++) {
-		for (int j = 1; j < width -1; j++) {
+            for (int ki = -1; ki <= 1; ki++) {
+                for (int kj = -1; kj <= 1; kj++) {
+                    int pixel = input[(i + ki) * width + (j + kj)];
+                    gx += pixel * kernelX[(ki + 1) * 3 + (kj + 1)];
+                    gy += pixel * kernelY[(ki + 1) * 3 + (kj + 1)];
+                }
+            }
 
-			int gx = 0;
-			int gy = 0;
+            int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
+            if (magnitude > 255) { magnitude = 255; }
+            output[i * width + j] = (magnitude >= SOBEL_EDGE_THRESHOLD) ? (uint8_t)magnitude : 0;
+        }
+    }
 
-			for (int ki = -1; ki <= 1; ki++) {
-				for (int kj = -1; kj <= 1; kj++) {
-					int pixel = input[(i + ki) * width + (j + kj)];
-					gx += pixel * kernel_x[(ki+1)*3 + (kj+1)];
-					gy += pixel * kernel_y[(ki+1)*3 + (kj+1)];
-				}
-			}
-
-			int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
-			if (magnitude > 255) magnitude = 255;
-			output[i * width + j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
-		}
-	}
-
-	// zero border pixels
-	for (int x = 0; x < width; x++) output[x] = 0;
-	for (int x = 0; x < width; x++) output[(height -1)*width + x] = 0;
-	for (int y = 0; y < height; y++) output[y*width] = 0;
-	for (int y = 0; y < height; y++) output[y*width + (width-1)] = 0;
+    // Zero the border pixels that the loop skips
+    for (int x = 0; x < width; x++) { output[x] = 0; }
+    for (int x = 0; x < width; x++) { output[(height - 1) * width + x] = 0; }
+    for (int y = 0; y < height; y++) { output[y * width] = 0; }
+    for (int y = 0; y < height; y++) { output[y * width + (width - 1)] = 0; }
 }
 
 // ---- Display Functions ----
 
-// Write a full image to pixel buffer using optimized 32-bit reads
-void display_full_image(uint8_t *buffer)
-{
-    volatile int* const pixel_dat_ptr = (volatile int*)(PIXEL_DAT_BASE | 0x80000000);
-    volatile int* const img_addy_ptr  = (volatile int*)(IMG_ADDY_BASE  | 0x80000000);
+// Writes a full 320x240 image to the pixel buffer using 32-bit reads for efficiency.
+// @param buffer Pointer to the source greyscale image (IMAGE_SIZE bytes)
+void display_full_image(uint8_t *buffer) {
+    volatile int* const pixelDatPtr = (volatile int*)(PIXEL_DAT_BASE | UNCACHED_MEM_MASK);
+    volatile int* const imgAddyPtr  = (volatile int*)(IMG_ADDY_BASE  | UNCACHED_MEM_MASK);
 
-    uint32_t* src_ptr32 = (uint32_t*)((uint32_t)buffer | 0x80000000);
-    uint32_t* const src_end32 = (uint32_t*)(((uint32_t)buffer + IMAGE_SIZE) | 0x80000000);
+    uint32_t* srcPtr32 = (uint32_t*)((uint32_t)buffer | UNCACHED_MEM_MASK);
+    uint32_t* const srcEnd32 = (uint32_t*)(((uint32_t)buffer + IMAGE_SIZE) | UNCACHED_MEM_MASK);
 
     int addr = 0;
 
-    while (src_ptr32 < src_end32) {
-        uint32_t block = *src_ptr32++;
+    while (srcPtr32 < srcEnd32) {
+        uint32_t block = *srcPtr32++;
 
-        *img_addy_ptr = addr++;
-        *pixel_dat_ptr = (block & 0xFF) >> 4;
+        *imgAddyPtr = addr++;
+        *pixelDatPtr = (block & 0xFF) >> 4;
 
-        *img_addy_ptr = addr++;
-        *pixel_dat_ptr = ((block >> 8) & 0xFF) >> 4;
+        *imgAddyPtr = addr++;
+        *pixelDatPtr = ((block >> 8) & 0xFF) >> 4;
 
-        *img_addy_ptr = addr++;
-        *pixel_dat_ptr = ((block >> 16) & 0xFF) >> 4;
+        *imgAddyPtr = addr++;
+        *pixelDatPtr = ((block >> 16) & 0xFF) >> 4;
 
-        *img_addy_ptr = addr++;
-        *pixel_dat_ptr = ((block >> 24) & 0xFF) >> 4;
+        *imgAddyPtr = addr++;
+        *pixelDatPtr = ((block >> 24) & 0xFF) >> 4;
     }
 }
 
-// Write a quarter image to a specific quadrant of the pixel buffer
-void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
-{
-    volatile int* const pixel_dat_ptr = (volatile int*)(PIXEL_DAT_BASE | 0x80000000);
-    volatile int* const img_addy_ptr  = (volatile int*)(IMG_ADDY_BASE  | 0x80000000);
+// Writes one quarter-size image to a specific quadrant of the pixel buffer.
+// @param buffer       Pointer to a buffer holding 4 packed quarter images
+// @param imageIndex   Which of the 4 sub-images to use as the source (0–3)
+// @param displayIndex Which screen quadrant to target (0=TL, 1=TR, 2=BL, 3=BR)
+void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex) {
+    volatile int* const pixelDatPtr = (volatile int*)(PIXEL_DAT_BASE | UNCACHED_MEM_MASK);
+    volatile int* const imgAddyPtr  = (volatile int*)(IMG_ADDY_BASE  | UNCACHED_MEM_MASK);
 
-    uint8_t* src = (uint8_t*)((uint32_t)buffer | 0x80000000);
+    uint8_t* src = (uint8_t*)((uint32_t)buffer | UNCACHED_MEM_MASK);
 
     uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
     uint32_t pixelBufferAddr = 0;
 
-    if (displayIndex & 0x1)
-        pixelBufferAddr += QUAD_IMAGE_WIDTH;
-    if (displayIndex & 0x2)
-        pixelBufferAddr += QUAD_IMAGE_SIZE * 2;
+    if (displayIndex & 0x1) { pixelBufferAddr += QUAD_IMAGE_WIDTH; }
+    if (displayIndex & 0x2) { pixelBufferAddr += QUAD_IMAGE_SIZE * 2; }
 
     for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++) {
         for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++) {
-            *img_addy_ptr  = pixelBufferAddr;
-            *pixel_dat_ptr = src[imgAddr] >> 4;
+            *imgAddyPtr  = pixelBufferAddr;
+            *pixelDatPtr = src[imgAddr] >> 4;
             imgAddr++;
             pixelBufferAddr++;
         }
@@ -213,10 +239,12 @@ void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIn
     }
 }
 
-
+// Main loop: waits for a frame token from the communications core, applies the
+// selected processing mode, and writes the result to the VGA pixel buffer.
+// @return 0 (loop runs indefinitely)
 int main() {
-    int currently_displaying = -1;
-    uint32_t last_frame_time = 0;
+    int currentlyDisplaying = -1;
+    uint32_t lastFrameTime = 0;
 
     alt_ic_isr_register(
         DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID,
@@ -226,83 +254,71 @@ int main() {
         NULL
     );
 
-    IOWR(DATA_MAILBOX_BASE, 3, 0x01);
+    IOWR(DATA_MAILBOX_BASE, 3, MAILBOX_IRQ_ENABLE);
 
-    while(1) {
-        // Update shared quad mode flag from switches each iteration
-        // Core 0 reads this to know what frame size to request
-        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
+    while (1) {
+        // Update the shared quad-mode flag from the switches on each iteration
+        sharedDisplay->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
 
-        if (new_frame_ready) {
-            new_frame_ready = 0;
+        if (newFrameReady) {
+            newFrameReady = 0;
 
-            // Calculate the time it took since the last frame was delivered
-            uint32_t current_time = IORD(USEC_COUNTER_BASE, 0);
-            if (last_frame_time != 0) {
-                uint32_t frameTime = current_time - last_frame_time;
+            uint32_t currentTime = IORD(USEC_COUNTER_BASE, 0);
+            if (lastFrameTime != 0) {
+                uint32_t frameTime = currentTime - lastFrameTime;
                 display_fps(frameTime);
             }
-            last_frame_time = current_time;
+            lastFrameTime = currentTime;
 
-            if (currently_displaying != -1) {
-                while (IORD(ACK_MAILBOX_BASE, 2) & 0x02);
-                IOWR(ACK_MAILBOX_BASE, 0, currently_displaying);
+            if (currentlyDisplaying != -1) {
+                while (IORD(ACK_MAILBOX_BASE, 2) & MAILBOX_STATUS_FULL);
+                IOWR(ACK_MAILBOX_BASE, 0, currentlyDisplaying);
             }
 
-            currently_displaying = current_frame_index;
+            currentlyDisplaying = currentFrameIndex;
 
-            // Get source buffer (uncached)
-            uint8_t* source = (uint8_t*)((uint32_t)buffers[currently_displaying] | 0x80000000);
+            uint8_t* source = (uint8_t*)((uint32_t)buffers[currentlyDisplaying] | UNCACHED_MEM_MASK);
 
-            uint8_t isQuad = shared_display->isQuad;
-            int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
+            uint8_t isQuad = sharedDisplay->isQuad;
+            int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3; // SW[2:1]
 
-            if (isQuad)
-            {
-                // Quad mode: one quarter image received, process 4 ways
+            if (isQuad) {
+                // Quad mode: one quarter image received, process into 4 output slots
+                memcpy(processingBuffer, source, QUAD_IMAGE_SIZE);
 
-                // Slot 0: raw
-                memcpy(processing_buffer, source, QUAD_IMAGE_SIZE);
-
-                // Slot 1: flip
                 process_flip(source,
-                             processing_buffer + QUAD_IMAGE_SIZE,
+                             processingBuffer + QUAD_IMAGE_SIZE,
                              QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
 
-                // Slot 2: blur
                 box_blur(source,
-                         processing_buffer + 2 * QUAD_IMAGE_SIZE,
+                         processingBuffer + 2 * QUAD_IMAGE_SIZE,
                          QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
-                // Slot 3: edge
                 sobel_edge_detection(source,
-                                     processing_buffer + 3 * QUAD_IMAGE_SIZE,
+                                     processingBuffer + 3 * QUAD_IMAGE_SIZE,
                                      QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
-                // Display each quadrant using indices controlled by Core 0 double-tap
-                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[0], 0);
-                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[1], 1);
-                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[2], 2);
-                display_quad_image(processing_buffer, shared_display->quadDisplayIndices[3], 3);
-            }
-            else
-            {
-                // Full mode: SW[2:1] selects processing
+                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[0], 0);
+                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[1], 1);
+                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[2], 2);
+                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[3], 3);
+            } else {
+                // Full mode: SW[2:1] selects the processing operation
                 switch (processMode) {
                     case PROC_FLIP:
-                        process_flip(source, processing_buffer,
+                        process_flip(source, processingBuffer,
                                      IMAGE_WIDTH, IMAGE_HEIGHT, 1);
-                        display_full_image(processing_buffer);
+                        display_full_image(processingBuffer);
                         break;
                     case PROC_BLUR:
-                        box_blur(source, processing_buffer,
+                        box_blur(source, processingBuffer,
                                  IMAGE_WIDTH, IMAGE_HEIGHT);
-                        display_full_image(processing_buffer);
+                        display_full_image(processingBuffer);
                         break;
                     case PROC_EDGE:
-                        sobel_edge_detection(source, processing_buffer,
+                        sobel_edge_detection(source, processingBuffer,
                                              IMAGE_WIDTH, IMAGE_HEIGHT);
-                        display_full_image(processing_buffer);
+                        display_full_image(processingBuffer);
                         break;
                     default: // PROC_RAW
                         display_full_image(source);

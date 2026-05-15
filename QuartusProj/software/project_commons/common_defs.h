@@ -1,3 +1,11 @@
+// Common project-wide type definitions and constants shared between both Nios II cores.
+// Created By: Nathan Morris       (32532601)
+//             Ritwam Shohaum      (33156816)
+//             Shuk Kan LUI        (33891885)
+//             Evgeny Solomin      (34977260)
+// Created Date: 2026
+// version = '1.0'
+
 #ifndef COMMON_DEFS_H
 #define COMMON_DEFS_H
 
@@ -9,7 +17,13 @@
 #define QUAD_IMAGE_HEIGHT 120
 #define QUAD_IMAGE_SIZE (QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
 
-// Struct to hold the accelerometer data safely
+// Bit mask applied to a cached SDRAM address to obtain the uncached alias
+#define UNCACHED_MEM_MASK 0x80000000
+
+// 7-segment display value for a blank (off) digit
+#define HEX_BLANK 0xFF
+
+// Struct to hold the accelerometer data safely across cores
 typedef struct {
     int16_t x;
     int16_t y;

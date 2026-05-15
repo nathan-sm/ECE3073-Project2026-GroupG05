@@ -1,3 +1,11 @@
+// Workshop 4 SPI skeleton — configures and reads the ADXL345 accelerometer via SPI.
+// Created By: Nathan Morris       (32532601)
+//             Ritwam Shohaum      (33156816)
+//             Shuk Kan LUI        (33891885)
+//             Evgeny Solomin      (34977260)
+// Created Date: 2026
+// version = '1.0'
+
 #include <stdio.h>
 // TODO add correct include
 
