@@ -61,10 +61,16 @@ static void mailbox_ack_isr(void* context) {
     }
 }
 
-// Called on a detected double-tap: cycles the quad display index for the tilt direction.
-void doubletap_handler() {
-    if (!sharedDisplay->isQuad) {
-        return;
+// --- Double-tap callback: cycle quad display based on tilt ---
+void doubletap_handler()
+{
+    if (!shared_display->isQuad)
+    {
+    	uint32_t displayMode = shared_display->singleModeDisplay;
+    	displayMode = (displayMode + 1) % 4;
+    	shared_display->singleModeDisplay = displayMode;
+
+    	return;
     }
 
     DeviceRotation rot = accel_get_device_rotation();
@@ -105,12 +111,13 @@ int main() {
 
     IOWR(ACK_MAILBOX_BASE, 3, MAILBOX_IRQ_ENABLE);
 
-    // Initialise shared display state
-    sharedDisplay->isQuad = 0;
-    sharedDisplay->quadDisplayIndices[0] = 0;
-    sharedDisplay->quadDisplayIndices[1] = 1;
-    sharedDisplay->quadDisplayIndices[2] = 2;
-    sharedDisplay->quadDisplayIndices[3] = 3;
+    // Initialize shared display state
+    shared_display->isQuad = 0;
+    shared_display->quadDisplayIndices[0] = 0;
+    shared_display->quadDisplayIndices[1] = 1;
+    shared_display->quadDisplayIndices[2] = 2;
+    shared_display->quadDisplayIndices[3] = 3;
+    shared_display->singleModeDisplay = 0;
 
     while (!IORD(CAM_REDY_BASE, 0));
 

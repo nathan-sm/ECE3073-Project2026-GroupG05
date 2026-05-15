@@ -4,6 +4,7 @@
         <BspVersion>default</BspVersion>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         <BspGeneratedTimeStamp>May 15, 2026 4:52:30 PM</BspGeneratedTimeStamp>
         <BspGeneratedUnixTimeStamp>1778827950550</BspGeneratedUnixTimeStamp>
 =======
@@ -14,6 +15,10 @@
         <BspGeneratedTimeStamp>May 15, 2026 2:31:52 PM</BspGeneratedTimeStamp>
         <BspGeneratedUnixTimeStamp>1778819512904</BspGeneratedUnixTimeStamp>
 >>>>>>> a33872d (Add benchmarking code)
+=======
+        <BspGeneratedTimeStamp>May 15, 2026 4:34:36 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778826876273</BspGeneratedUnixTimeStamp>
+>>>>>>> b8d7354 (Implement single display mode switch on doubletap)
         <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/communications_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>

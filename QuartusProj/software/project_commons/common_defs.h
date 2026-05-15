@@ -36,6 +36,7 @@ typedef struct {
     volatile uint8_t isQuad;
     volatile uint8_t _pad[3];
     volatile uint32_t quadDisplayIndices[4];
+    volatile uint32_t singleModeDisplay;
 } SharedDisplayState;
 
 typedef struct {

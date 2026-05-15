@@ -203,7 +203,7 @@ int main() {
 //    	printf("Img proc received frame, address: %d\n", (int)source);
 
 		uint8_t isQuad = shared_display->isQuad;
-		int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
+		int processMode = shared_display->singleModeDisplay;  // SW[2:1]
 
 		if (isQuad)
 		{
