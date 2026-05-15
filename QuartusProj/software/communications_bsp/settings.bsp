@@ -3,12 +3,17 @@
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
 <<<<<<< HEAD
+<<<<<<< HEAD
         <BspGeneratedTimeStamp>May 15, 2026 4:52:30 PM</BspGeneratedTimeStamp>
         <BspGeneratedUnixTimeStamp>1778827950550</BspGeneratedUnixTimeStamp>
 =======
         <BspGeneratedTimeStamp>May 15, 2026 1:01:38 PM</BspGeneratedTimeStamp>
         <BspGeneratedUnixTimeStamp>1778814098615</BspGeneratedUnixTimeStamp>
 >>>>>>> 8199274 (Implement process -> display double buffer)
+=======
+        <BspGeneratedTimeStamp>May 15, 2026 2:31:52 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778819512904</BspGeneratedUnixTimeStamp>
+>>>>>>> a33872d (Add benchmarking code)
         <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/communications_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
@@ -916,44 +921,50 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>sw</slaveDescriptor>
+                <slaveDescriptor>usec_counter</slaveDescriptor>
                 <addressRange>0x04001020 - 0x0400102F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>cam_redy</slaveDescriptor>
+                <slaveDescriptor>sw</slaveDescriptor>
                 <addressRange>0x04001030 - 0x0400103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <slaveDescriptor>cam_redy</slaveDescriptor>
                 <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <slaveDescriptor>gsens_int</slaveDescriptor>
                 <addressRange>0x04001050 - 0x0400105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>data_mailbox</slaveDescriptor>
+                <slaveDescriptor>altpll_0</slaveDescriptor>
                 <addressRange>0x04001060 - 0x0400106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>ack_mailbox</slaveDescriptor>
+                <slaveDescriptor>data_mailbox</slaveDescriptor>
                 <addressRange>0x04001070 - 0x0400107F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
+                <slaveDescriptor>ack_mailbox</slaveDescriptor>
+                <addressRange>0x04001080 - 0x0400108F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
                 <slaveDescriptor>comms_jtag</slaveDescriptor>
-                <addressRange>0x04001080 - 0x04001087</addressRange>
+                <addressRange>0x04001090 - 0x04001097</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>

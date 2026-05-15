@@ -4,7 +4,7 @@
  * Machine generated for CPU 'comms_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Fri May 15 12:26:20 EST 2026
+ * Generated: Fri May 15 14:31:53 EST 2026
  */
 
 /*
@@ -166,19 +166,19 @@
 #define ALT_NUM_INTERNAL_INTERRUPT_CONTROLLERS 1
 #define ALT_NUM_INTERRUPT_CONTROLLERS 1
 #define ALT_STDERR "/dev/comms_jtag"
-#define ALT_STDERR_BASE 0x4001080
+#define ALT_STDERR_BASE 0x4001090
 #define ALT_STDERR_DEV comms_jtag
 #define ALT_STDERR_IS_JTAG_UART
 #define ALT_STDERR_PRESENT
 #define ALT_STDERR_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDIN "/dev/comms_jtag"
-#define ALT_STDIN_BASE 0x4001080
+#define ALT_STDIN_BASE 0x4001090
 #define ALT_STDIN_DEV comms_jtag
 #define ALT_STDIN_IS_JTAG_UART
 #define ALT_STDIN_PRESENT
 #define ALT_STDIN_TYPE "altera_avalon_jtag_uart"
 #define ALT_STDOUT "/dev/comms_jtag"
-#define ALT_STDOUT_BASE 0x4001080
+#define ALT_STDOUT_BASE 0x4001090
 #define ALT_STDOUT_DEV comms_jtag
 #define ALT_STDOUT_IS_JTAG_UART
 #define ALT_STDOUT_PRESENT
@@ -191,7 +191,7 @@
  *
  */
 
-#define ACK_MAILBOX_BASE 0x4001070
+#define ACK_MAILBOX_BASE 0x4001080
 #define ACK_MAILBOX_IRQ 0
 #define ACK_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define ACK_MAILBOX_NAME "/dev/ack_mailbox"
@@ -205,7 +205,7 @@
  *
  */
 
-#define ALTPLL_0_BASE 0x4001050
+#define ALTPLL_0_BASE 0x4001060
 #define ALTPLL_0_IRQ -1
 #define ALTPLL_0_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define ALTPLL_0_NAME "/dev/altpll_0"
@@ -220,7 +220,7 @@
  */
 
 #define ALT_MODULE_CLASS_cam_redy altera_avalon_pio
-#define CAM_REDY_BASE 0x4001030
+#define CAM_REDY_BASE 0x4001040
 #define CAM_REDY_BIT_CLEARING_EDGE_REGISTER 0
 #define CAM_REDY_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define CAM_REDY_CAPTURE 0
@@ -247,7 +247,7 @@
  */
 
 #define ALT_MODULE_CLASS_comms_jtag altera_avalon_jtag_uart
-#define COMMS_JTAG_BASE 0x4001080
+#define COMMS_JTAG_BASE 0x4001090
 #define COMMS_JTAG_IRQ 3
 #define COMMS_JTAG_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define COMMS_JTAG_NAME "/dev/comms_jtag"
@@ -265,7 +265,7 @@
  */
 
 #define ALT_MODULE_CLASS_data_mailbox altera_avalon_mailbox_simple
-#define DATA_MAILBOX_BASE 0x4001060
+#define DATA_MAILBOX_BASE 0x4001070
 #define DATA_MAILBOX_IRQ -1
 #define DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define DATA_MAILBOX_NAME "/dev/data_mailbox"
@@ -279,7 +279,7 @@
  */
 
 #define ALT_MODULE_CLASS_gsens_int altera_avalon_pio
-#define GSENS_INT_BASE 0x4001040
+#define GSENS_INT_BASE 0x4001050
 #define GSENS_INT_BIT_CLEARING_EDGE_REGISTER 0
 #define GSENS_INT_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define GSENS_INT_CAPTURE 1
@@ -387,7 +387,7 @@
  */
 
 #define ALT_MODULE_CLASS_sw altera_avalon_pio
-#define SW_BASE 0x4001020
+#define SW_BASE 0x4001030
 #define SW_BIT_CLEARING_EDGE_REGISTER 0
 #define SW_BIT_MODIFYING_OUTPUT_REGISTER 0
 #define SW_CAPTURE 0
@@ -406,5 +406,32 @@
 #define SW_RESET_VALUE 0
 #define SW_SPAN 16
 #define SW_TYPE "altera_avalon_pio"
+
+
+/*
+ * usec_counter configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_usec_counter altera_avalon_pio
+#define USEC_COUNTER_BASE 0x4001020
+#define USEC_COUNTER_BIT_CLEARING_EDGE_REGISTER 0
+#define USEC_COUNTER_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define USEC_COUNTER_CAPTURE 0
+#define USEC_COUNTER_DATA_WIDTH 32
+#define USEC_COUNTER_DO_TEST_BENCH_WIRING 0
+#define USEC_COUNTER_DRIVEN_SIM_VALUE 0
+#define USEC_COUNTER_EDGE_TYPE "NONE"
+#define USEC_COUNTER_FREQ 50000000
+#define USEC_COUNTER_HAS_IN 1
+#define USEC_COUNTER_HAS_OUT 0
+#define USEC_COUNTER_HAS_TRI 0
+#define USEC_COUNTER_IRQ -1
+#define USEC_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define USEC_COUNTER_IRQ_TYPE "NONE"
+#define USEC_COUNTER_NAME "/dev/usec_counter"
+#define USEC_COUNTER_RESET_VALUE 0
+#define USEC_COUNTER_SPAN 16
+#define USEC_COUNTER_TYPE "altera_avalon_pio"
 
 #endif /* __SYSTEM_H_ */

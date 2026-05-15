@@ -9,13 +9,14 @@
 
 volatile int nextFrameReady = 0;
 volatile uint32_t bufToDraw = 0;
-uint32_t lastFrameTime = 0;
 
 SharedDisplayState *displayState = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 uint8_t *sourceBuffers[] = {
 		(uint8_t*)(PROCESSED_IMG_BUF_A),
 		(uint8_t*)(PROCESSED_IMG_BUF_B)
 };
+
+SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
 
 // ---- Display Functions ----
 
@@ -121,12 +122,18 @@ int main()
 
 	IOWR(DISPLAY_FRAME_MAILBOX_BASE, 3, 0x1);
 
-	lastFrameTime = IORD(USEC_COUNTER_BASE, 0);
-
 	// benchmarking accumulators
 	uint32_t bench_count = 0;
-	uint32_t sum_frame   = 0;
-	uint32_t sum_display = 0;
+	uint32_t lastCycleTime = 0;
+	SharedTimingData timingDataSums;
+
+	timingDataSums.frameReadTime = 0;
+	timingDataSums.noFilterTime = 0;
+	timingDataSums.flipTime = 0;
+	timingDataSums.blurTime = 0;
+	timingDataSums.sobelTime = 0;
+	timingDataSums.displayTime = 0;
+	timingDataSums.frameTime = 0;
 
 	printf("Display proc init. Benchmarking every %d frames.\n\n", BENCH_INTERVAL);
 
@@ -135,21 +142,11 @@ int main()
 		while (!nextFrameReady);
 		nextFrameReady = 0;
 
-		// frame-to-frame timing
-		uint32_t currentTime = IORD(USEC_COUNTER_BASE, 0);
-		uint32_t frameTime = 0;
-		if (lastFrameTime != 0) {
-			frameTime = currentTime - lastFrameTime;
-			display_fps(frameTime);
-			sum_frame += frameTime;
-		}
-		lastFrameTime = currentTime;
-
 		int isQuad = displayState->isQuad;
 		uint8_t *bufferDrawPtr = sourceBuffers[bufToDraw];
 
 		// time the display
-		uint32_t t_disp = IORD(USEC_COUNTER_BASE, 0);
+		uint32_t displayBeginTime = IORD(USEC_COUNTER_BASE, 0);
 
 		if (isQuad)
 		{
@@ -162,33 +159,66 @@ int main()
 		{
 			display_full_image(bufferDrawPtr);
 		}
+		uint32_t displayEndTime = IORD(USEC_COUNTER_BASE, 0);
+		sharedTimingData->displayTime = displayEndTime - displayBeginTime;
 
-		uint32_t disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp;
-		sum_display += disp_time;
+		// frame-to-frame timing
+		uint32_t currentTime = IORD(USEC_COUNTER_BASE, 0);
+		sharedTimingData->frameTime = currentTime - lastCycleTime;
+		lastCycleTime = currentTime;
+
+		display_fps(sharedTimingData->frameTime);
+
+		timingDataSums.frameReadTime += sharedTimingData->frameReadTime;
+		timingDataSums.noFilterTime += sharedTimingData->noFilterTime;
+		timingDataSums.flipTime += sharedTimingData->flipTime;
+		timingDataSums.blurTime += sharedTimingData->blurTime;
+		timingDataSums.sobelTime += sharedTimingData->sobelTime;
+		timingDataSums.displayTime += sharedTimingData->displayTime;
+		timingDataSums.frameTime += sharedTimingData->frameTime;
+
 		bench_count++;
 
 		if (bench_count >= BENCH_INTERVAL) {
-			uint32_t avg_frame = sum_frame / bench_count;
-			uint32_t avg_disp  = sum_display / bench_count;
-			// processing time estimate: frame interval minus display time
-			uint32_t avg_proc  = (avg_frame > avg_disp) ? avg_frame - avg_disp : 0;
+			uint32_t avgFrameRead = timingDataSums.frameReadTime / bench_count;
+			uint32_t avgNoFilterTime = timingDataSums.noFilterTime / bench_count;
+			uint32_t avgFlip = timingDataSums.flipTime / bench_count;
+			uint32_t avgBlur = timingDataSums.blurTime / bench_count;
+			uint32_t avgSobel = timingDataSums.sobelTime / bench_count;
+			uint32_t avgDisplay = timingDataSums.displayTime / bench_count;
+			uint32_t avgFrameTime = timingDataSums.frameTime / bench_count;
 
-			uint32_t fps_whole = avg_frame > 0 ? 1000000 / avg_frame : 0;
-			uint32_t fps_frac  = avg_frame > 0 ? (100000000 / avg_frame) % 100 : 0;
+			uint32_t fps_whole = avgFrameTime > 0 ? 1000000 / avgFrameTime : 0;
+			uint32_t fps_frac  = avgFrameTime > 0 ? (100000000 / avgFrameTime) % 100 : 0;
 
 			printf("===================================================\n");
 			printf("  %s mode (avg over %lu frames)\n",
 				   isQuad ? "QUAD" : "SINGLE", bench_count);
 			printf("===================================================\n");
-			printf("  Display:        %lu us\n", avg_disp);
-			printf("  Processing:     ~%lu us (frame - display)\n", avg_proc);
+			printf("  SPI Frame Read: %lu us\n", avgFrameRead);
+			printf("\n");
+
+			printf("  Filters:\n");
+			printf("    - None: %lu us\n", avgNoFilterTime);
+			printf("    - Flip: %lu us\n", avgFlip);
+			printf("    - Blur: %lu us\n", avgBlur);
+			printf("    - Sobel: %lu us\n", avgSobel);
+			printf("\n");
+
+			printf("  Display:        %lu us\n", avgDisplay);
+
 			printf("  -------------------------------------------\n");
-			printf("  Frame interval: %lu us\n", avg_frame);
+			printf("  Frame interval: %lu us\n", avgFrameTime);
 			printf("  FPS:            %lu.%02lu\n\n", fps_whole, fps_frac);
 
 			bench_count = 0;
-			sum_frame   = 0;
-			sum_display = 0;
+			timingDataSums.frameReadTime = 0;
+			timingDataSums.noFilterTime = 0;
+			timingDataSums.flipTime = 0;
+			timingDataSums.blurTime = 0;
+			timingDataSums.sobelTime = 0;
+			timingDataSums.displayTime = 0;
+			timingDataSums.frameTime = 0;
 		}
 	}
 }

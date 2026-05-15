@@ -41,8 +41,9 @@ uint8_t* buffers[3] = {
 };
 
 // Map the structs to SDRAM right after the 3 image buffers
-SharedAccelData* sharedAccel = (SharedAccelData*)(SHARED_ACCEL_DATA);
-SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
+SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
+SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
+SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
 
 // 1 = buffer is free for writing, 0 = buffer is locked by the image processing core
 volatile int freeBuffers[3] = {1, 1, 1};
@@ -117,6 +118,8 @@ int main() {
     uint8_t startup_cmd = CAM_WRITE_MASK;
     alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, IMAGE_SIZE, buffers[0], 0);
 
+    sharedTimingData->frameReadTime = 0;
+
     printf("Comms init\n");
 
     while(1) {
@@ -154,6 +157,7 @@ int main() {
         uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
         uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
 
+        uint32_t frameReadBeginTime = IORD(USEC_COUNTER_BASE, 0);
         alt_avalon_spi_command(
             SPI_0_BASE,
             0,
@@ -163,6 +167,8 @@ int main() {
             destPtr,
             0
         );
+        uint32_t frameReadEndTime = IORD(USEC_COUNTER_BASE, 0);
+        sharedTimingData->frameReadTime = frameReadEndTime - frameReadBeginTime;
 
         // Fetch and share fresh accelerometer data with the image processing core
         accel_update();

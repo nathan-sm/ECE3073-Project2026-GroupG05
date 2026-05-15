@@ -38,4 +38,17 @@ typedef struct {
     volatile uint32_t quadDisplayIndices[4];
 } SharedDisplayState;
 
+typedef struct {
+	volatile uint32_t frameReadTime;
+
+	volatile uint32_t noFilterTime;
+	volatile uint32_t flipTime;
+	volatile uint32_t blurTime;
+	volatile uint32_t sobelTime;
+
+	volatile uint32_t displayTime;
+
+	volatile uint32_t frameTime;
+} SharedTimingData;
+
 #endif

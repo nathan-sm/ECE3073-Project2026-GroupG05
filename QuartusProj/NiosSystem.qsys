@@ -26,7 +26,7 @@
    {
       datum baseAddress
       {
-         value = "67113072";
+         value = "67113088";
          type = "String";
       }
    }
@@ -34,7 +34,7 @@
    {
       datum baseAddress
       {
-         value = "67113072";
+         value = "67113088";
          type = "String";
       }
    }
@@ -55,7 +55,7 @@
    {
       datum baseAddress
       {
-         value = "67113040";
+         value = "67113056";
          type = "String";
       }
    }
@@ -76,7 +76,7 @@
    {
       datum baseAddress
       {
-         value = "67113008";
+         value = "67113024";
          type = "String";
       }
    }
@@ -110,7 +110,7 @@
    {
       datum baseAddress
       {
-         value = "67113088";
+         value = "67113104";
          type = "String";
       }
    }
@@ -160,7 +160,7 @@
    {
       datum baseAddress
       {
-         value = "67113088";
+         value = "67113104";
          type = "String";
       }
    }
@@ -168,7 +168,7 @@
    {
       datum baseAddress
       {
-         value = "67113056";
+         value = "67113072";
          type = "String";
       }
    }
@@ -205,7 +205,7 @@
    {
       datum baseAddress
       {
-         value = "67113056";
+         value = "67113072";
          type = "String";
       }
    }
@@ -255,7 +255,7 @@
    {
       datum _sortIndex
       {
-         value = "11";
+         value = "10";
          type = "int";
       }
       datum sopceditor_expanded
@@ -268,7 +268,7 @@
    {
       datum baseAddress
       {
-         value = "67113024";
+         value = "67113040";
          type = "String";
       }
    }
@@ -289,7 +289,7 @@
    {
       datum baseAddress
       {
-         value = "67112976";
+         value = "67112960";
          type = "String";
       }
    }
@@ -310,7 +310,7 @@
    {
       datum baseAddress
       {
-         value = "67113008";
+         value = "67112976";
          type = "String";
       }
    }
@@ -331,7 +331,7 @@
    {
       datum baseAddress
       {
-         value = "67113104";
+         value = "67113120";
          type = "String";
       }
    }
@@ -394,7 +394,7 @@
    {
       datum baseAddress
       {
-         value = "67112960";
+         value = "67113024";
          type = "String";
       }
    }
@@ -415,7 +415,7 @@
    {
       datum baseAddress
       {
-         value = "67113024";
+         value = "67113040";
          type = "String";
       }
    }
@@ -504,7 +504,7 @@
    {
       datum baseAddress
       {
-         value = "67112992";
+         value = "67113008";
          type = "String";
       }
    }
@@ -512,12 +512,12 @@
    {
       datum _sortIndex
       {
-         value = "10";
+         value = "11";
          type = "int";
       }
       datum sopceditor_expanded
       {
-         value = "0";
+         value = "1";
          type = "boolean";
       }
    }
@@ -525,7 +525,7 @@
    {
       datum baseAddress
       {
-         value = "67112960";
+         value = "67112992";
          type = "String";
       }
    }
@@ -841,7 +841,7 @@
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='comms_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='spi_0.spi_control_port' start='0x4001000' end='0x4001020' type='altera_avalon_spi.spi_control_port' /><slave name='sw.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='cam_redy.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='gsens_int.s1' start='0x4001040' end='0x4001050' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001050' end='0x4001060' type='altpll.pll_slave' /><slave name='data_mailbox.avmm_msg_sender' start='0x4001060' end='0x4001070' type='altera_avalon_mailbox_simple.avmm_msg_sender' /><slave name='ack_mailbox.avmm_msg_receiver' start='0x4001070' end='0x4001080' type='altera_avalon_mailbox_simple.avmm_msg_receiver' /><slave name='comms_jtag.avalon_jtag_slave' start='0x4001080' end='0x4001088' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='comms_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='spi_0.spi_control_port' start='0x4001000' end='0x4001020' type='altera_avalon_spi.spi_control_port' /><slave name='usec_counter.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='cam_redy.s1' start='0x4001040' end='0x4001050' type='altera_avalon_pio.s1' /><slave name='gsens_int.s1' start='0x4001050' end='0x4001060' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001060' end='0x4001070' type='altpll.pll_slave' /><slave name='data_mailbox.avmm_msg_sender' start='0x4001070' end='0x4001080' type='altera_avalon_mailbox_simple.avmm_msg_sender' /><slave name='ack_mailbox.avmm_msg_receiver' start='0x4001080' end='0x4001090' type='altera_avalon_mailbox_simple.avmm_msg_receiver' /><slave name='comms_jtag.avalon_jtag_slave' start='0x4001090' end='0x4001098' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -1062,7 +1062,7 @@
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='display_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='usec_counter.s1' start='0x4001000' end='0x4001010' type='altera_avalon_pio.s1' /><slave name='hex20.s1' start='0x4001010' end='0x4001020' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='pixel_dat.s1' start='0x4001040' end='0x4001050' type='altera_avalon_pio.s1' /><slave name='img_addy.s1' start='0x4001050' end='0x4001060' type='altera_avalon_pio.s1' /><slave name='display_frame_mailbox.avmm_msg_receiver' start='0x4001060' end='0x4001070' type='altera_avalon_mailbox_simple.avmm_msg_receiver' /><slave name='display_jtag.avalon_jtag_slave' start='0x4001070' end='0x4001078' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='display_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='hex20.s1' start='0x4001000' end='0x4001010' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4001010' end='0x4001020' type='altera_avalon_pio.s1' /><slave name='usec_counter.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='pixel_dat.s1' start='0x4001040' end='0x4001050' type='altera_avalon_pio.s1' /><slave name='img_addy.s1' start='0x4001050' end='0x4001060' type='altera_avalon_pio.s1' /><slave name='display_frame_mailbox.avmm_msg_receiver' start='0x4001060' end='0x4001070' type='altera_avalon_mailbox_simple.avmm_msg_receiver' /><slave name='display_jtag.avalon_jtag_slave' start='0x4001070' end='0x4001078' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -1301,7 +1301,7 @@
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='image_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='key.s1' start='0x4001000' end='0x4001010' type='altera_avalon_pio.s1' /><slave name='hex20.s1' start='0x4001010' end='0x4001020' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='ledr.s1' start='0x4001040' end='0x4001050' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001050' end='0x4001060' type='altpll.pll_slave' /><slave name='display_frame_mailbox.avmm_msg_sender' start='0x4001060' end='0x4001070' type='altera_avalon_mailbox_simple.avmm_msg_sender' /><slave name='ack_mailbox.avmm_msg_sender' start='0x4001070' end='0x4001080' type='altera_avalon_mailbox_simple.avmm_msg_sender' /><slave name='data_mailbox.avmm_msg_receiver' start='0x4001080' end='0x4001090' type='altera_avalon_mailbox_simple.avmm_msg_receiver' /><slave name='image_jtag.avalon_jtag_slave' start='0x4001090' end='0x4001098' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram_control.s1' start='0x0' end='0x4000000' type='altera_avalon_new_sdram_controller.s1' /><slave name='image_proc.debug_mem_slave' start='0x4000800' end='0x4001000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='hex20.s1' start='0x4001000' end='0x4001010' type='altera_avalon_pio.s1' /><slave name='hex53.s1' start='0x4001010' end='0x4001020' type='altera_avalon_pio.s1' /><slave name='usec_counter.s1' start='0x4001020' end='0x4001030' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x4001030' end='0x4001040' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x4001040' end='0x4001050' type='altera_avalon_pio.s1' /><slave name='ledr.s1' start='0x4001050' end='0x4001060' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x4001060' end='0x4001070' type='altpll.pll_slave' /><slave name='display_frame_mailbox.avmm_msg_sender' start='0x4001070' end='0x4001080' type='altera_avalon_mailbox_simple.avmm_msg_sender' /><slave name='ack_mailbox.avmm_msg_sender' start='0x4001080' end='0x4001090' type='altera_avalon_mailbox_simple.avmm_msg_sender' /><slave name='data_mailbox.avmm_msg_receiver' start='0x4001090' end='0x40010A0' type='altera_avalon_mailbox_simple.avmm_msg_receiver' /><slave name='image_jtag.avalon_jtag_slave' start='0x40010A0' end='0x40010A8' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -1598,7 +1598,7 @@
    start="image_proc.data_master"
    end="image_jtag.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001090" />
+  <parameter name="baseAddress" value="0x040010a0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1607,7 +1607,7 @@
    start="comms_proc.data_master"
    end="comms_jtag.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001080" />
+  <parameter name="baseAddress" value="0x04001090" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1625,7 +1625,7 @@
    start="image_proc.data_master"
    end="data_mailbox.avmm_msg_receiver">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001080" />
+  <parameter name="baseAddress" value="0x04001090" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1634,7 +1634,7 @@
    start="comms_proc.data_master"
    end="ack_mailbox.avmm_msg_receiver">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001070" />
+  <parameter name="baseAddress" value="0x04001080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1652,7 +1652,7 @@
    start="comms_proc.data_master"
    end="data_mailbox.avmm_msg_sender">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001060" />
+  <parameter name="baseAddress" value="0x04001070" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1661,7 +1661,7 @@
    start="image_proc.data_master"
    end="ack_mailbox.avmm_msg_sender">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001070" />
+  <parameter name="baseAddress" value="0x04001080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1670,7 +1670,7 @@
    start="image_proc.data_master"
    end="display_frame_mailbox.avmm_msg_sender">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001060" />
+  <parameter name="baseAddress" value="0x04001070" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1706,7 +1706,7 @@
    start="image_proc.data_master"
    end="altpll_0.pll_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001050" />
+  <parameter name="baseAddress" value="0x04001060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1715,7 +1715,7 @@
    start="comms_proc.data_master"
    end="altpll_0.pll_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001050" />
+  <parameter name="baseAddress" value="0x04001060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1733,7 +1733,7 @@
    start="image_proc.data_master"
    end="ledr.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001040" />
+  <parameter name="baseAddress" value="0x04001050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1742,7 +1742,7 @@
    start="image_proc.data_master"
    end="key.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001000" />
+  <parameter name="baseAddress" value="0x04001040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1751,7 +1751,7 @@
    start="image_proc.data_master"
    end="hex20.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001010" />
+  <parameter name="baseAddress" value="0x04001000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1760,7 +1760,7 @@
    start="image_proc.data_master"
    end="hex53.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001030" />
+  <parameter name="baseAddress" value="0x04001010" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1778,7 +1778,7 @@
    start="comms_proc.data_master"
    end="gsens_int.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001040" />
+  <parameter name="baseAddress" value="0x04001050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1787,7 +1787,7 @@
    start="comms_proc.data_master"
    end="cam_redy.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001030" />
+  <parameter name="baseAddress" value="0x04001040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1823,7 +1823,7 @@
    start="display_proc.data_master"
    end="hex53.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001030" />
+  <parameter name="baseAddress" value="0x04001010" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1832,7 +1832,7 @@
    start="display_proc.data_master"
    end="hex20.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001010" />
+  <parameter name="baseAddress" value="0x04001000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1841,7 +1841,7 @@
    start="display_proc.data_master"
    end="usec_counter.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001000" />
+  <parameter name="baseAddress" value="0x04001020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1850,7 +1850,7 @@
    start="comms_proc.data_master"
    end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001020" />
+  <parameter name="baseAddress" value="0x04001030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1859,7 +1859,7 @@
    start="display_proc.data_master"
    end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04001020" />
+  <parameter name="baseAddress" value="0x04001030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1867,6 +1867,24 @@
    version="18.1"
    start="image_proc.data_master"
    end="sw.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04001030" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="image_proc.data_master"
+   end="usec_counter.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04001020" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="comms_proc.data_master"
+   end="usec_counter.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x04001020" />
   <parameter name="defaultConnection" value="false" />
