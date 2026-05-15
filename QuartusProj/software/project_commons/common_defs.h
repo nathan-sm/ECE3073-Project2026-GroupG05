@@ -9,6 +9,8 @@
 #ifndef COMMON_DEFS_H
 #define COMMON_DEFS_H
 
+#include "stdint.h"
+
 #define IMAGE_WIDTH 320
 #define IMAGE_HEIGHT 240
 #define IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)
@@ -34,6 +36,20 @@ typedef struct {
     volatile uint8_t isQuad;
     volatile uint8_t _pad[3];
     volatile uint32_t quadDisplayIndices[4];
+    volatile uint32_t singleModeDisplay;
 } SharedDisplayState;
+
+typedef struct {
+	volatile uint32_t frameReadTime;
+
+	volatile uint32_t noFilterTime;
+	volatile uint32_t flipTime;
+	volatile uint32_t blurTime;
+	volatile uint32_t sobelTime;
+
+	volatile uint32_t displayTime;
+
+	volatile uint32_t frameTime;
+} SharedTimingData;
 
 #endif

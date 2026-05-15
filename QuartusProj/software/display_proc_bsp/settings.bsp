@@ -4,21 +4,26 @@
         <BspVersion>default</BspVersion>
 <<<<<<< HEAD
 <<<<<<< HEAD
-        <BspGeneratedTimeStamp>May 15, 2026 4:52:39 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778827959841</BspGeneratedUnixTimeStamp>
+<<<<<<< HEAD
+        <BspGeneratedTimeStamp>May 15, 2026 4:52:36 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778827956713</BspGeneratedUnixTimeStamp>
 =======
-        <BspGeneratedTimeStamp>May 15, 2026 2:31:45 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778819505515</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>May 15, 2026 1:01:57 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778814117355</BspGeneratedUnixTimeStamp>
+>>>>>>> 8199274 (Implement process -> display double buffer)
+=======
+        <BspGeneratedTimeStamp>May 15, 2026 2:31:48 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778819508633</BspGeneratedUnixTimeStamp>
 >>>>>>> a33872d (Add benchmarking code)
 =======
-        <BspGeneratedTimeStamp>May 15, 2026 4:34:57 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778826897069</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>May 15, 2026 4:34:49 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778826889068</BspGeneratedUnixTimeStamp>
 >>>>>>> b8d7354 (Implement single display mode switch on doubletap)
-        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/image_processing_bsp</BspGeneratedLocation>
+        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/display_proc_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
-        <Cpu>image_proc</Cpu>
+        <Cpu>display_proc</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
         <Setting>
                 <SettingName>hal.sys_clk_timer</SettingName>
@@ -48,7 +53,7 @@
                 <SettingName>hal.max_file_descriptors</SettingName>
                 <Identifier>ALT_MAX_FD</Identifier>
                 <Type>DecimalNumber</Type>
-                <Value>4</Value>
+                <Value>32</Value>
                 <DefaultValue>32</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Determines the number of file descriptors statically allocated. This setting defines the value of ALT_MAX_FD in system.h.</Description>
@@ -204,7 +209,7 @@
                 <SettingName>hal.stdin</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>image_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDIN character-mode device. This setting is used by the ALT_STDIN family of defines in system.h.</Description>
@@ -216,7 +221,7 @@
                 <SettingName>hal.stdout</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>image_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDOUT character-mode device. This setting is used by the ALT_STDOUT family of defines in system.h.</Description>
@@ -228,7 +233,7 @@
                 <SettingName>hal.stderr</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>image_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDERR character-mode device. This setting is used by the ALT_STDERR family of defines in system.h.</Description>
@@ -396,7 +401,7 @@
                 <SettingName>hal.make.bsp_cflags_optimization</SettingName>
                 <Identifier>BSP_CFLAGS_OPTIMIZATION</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>'-Os'</Value>
+                <Value>-O0</Value>
                 <DefaultValue>-O0</DefaultValue>
                 <DestinationFile>makefile_variable</DestinationFile>
                 <Description>C/C++ compiler optimization level. "-O0" = no optimization,"-O2" = "normal" optimization, etc. "-O0" is recommended for code that you want to debug since compiler optimization can remove variables and produce non-sequential execution of code while debugging. This setting defines the value of BSP_CFLAGS_OPTIMIZATION in Makefile.</Description>
@@ -732,7 +737,7 @@
                 <SettingName>hal.enable_exit</SettingName>
                 <Identifier>ALT_NO_EXIT</Identifier>
                 <Type>Boolean</Type>
-                <Value>0</Value>
+                <Value>1</Value>
                 <DefaultValue>1</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Add exit() support. This option increases code footprint if your "main()" routine does "return" or call "exit()". If false, adds -DALT_NO_EXIT to ALT_CPPFLAGS in public.mk, and reduces footprint</Description>
@@ -744,7 +749,7 @@
                 <SettingName>hal.enable_small_c_library</SettingName>
                 <Identifier>none</Identifier>
                 <Type>Boolean</Type>
-                <Value>1</Value>
+                <Value>0</Value>
                 <DefaultValue>0</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Causes the small newlib (C library) to be used. This reduces code and data footprint at the expense of reduced functionality. Several newlib features are removed such as floating-point support in printf(), stdin input routines, and buffered I/O. The small C library is not compatible with Micrium MicroC/OS-II. If true, adds -msmallc to ALT_LDFLAGS in public.mk.</Description>
@@ -756,7 +761,7 @@
                 <SettingName>hal.enable_clean_exit</SettingName>
                 <Identifier>ALT_NO_CLEAN_EXIT</Identifier>
                 <Type>Boolean</Type>
-                <Value>0</Value>
+                <Value>1</Value>
                 <DefaultValue>1</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>When your application exits, close file descriptors, call C++ destructors, etc. Code footprint can be reduced by disabling clean exit. If disabled, adds -DALT_NO_CLEAN_EXIT to ALT_CPPFLAGS -D'exit(a)=_exit(a)' in public.mk.</Description>
@@ -792,7 +797,7 @@
                 <SettingName>hal.enable_c_plus_plus</SettingName>
                 <Identifier>ALT_NO_C_PLUS_PLUS</Identifier>
                 <Type>Boolean</Type>
-                <Value>0</Value>
+                <Value>1</Value>
                 <DefaultValue>1</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Enable support for a subset of the C++ language. This option increases code footprint by adding support for C++ constructors. Certain features, such as multiple inheritance and exceptions are not supported. If false, adds -DALT_NO_C_PLUS_PLUS to ALT_CPPFLAGS in public.mk, and reduces code footprint.</Description>
@@ -816,7 +821,7 @@
                 <SettingName>hal.enable_lightweight_device_driver_api</SettingName>
                 <Identifier>ALT_USE_DIRECT_DRIVERS</Identifier>
                 <Type>Boolean</Type>
-                <Value>1</Value>
+                <Value>0</Value>
                 <DefaultValue>0</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Enables lightweight device driver API. This reduces code and data footprint by removing the HAL layer that maps device names (e.g. /dev/uart0) to file descriptors. Instead, driver routines are called directly. The open(), close(), and lseek() routines will always fail if called. The read(), write(), fstat(), ioctl(), and isatty() routines only work for the stdio devices. If true, adds -DALT_USE_DIRECT_DRIVERS to ALT_CPPFLAGS in public.mk.</Description>
@@ -908,6 +913,30 @@
                 <Enabled>false</Enabled>
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
+        <LinkerRegion>
+                <regionName>sdram_control_BEFORE_RESET</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>0</offset>
+                <size>131072</size>
+                <baseAddress>0x0</baseAddress>
+                <addressRange>0x00000000 - 0x0001FFFF</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>reset</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>262144</offset>
+                <size>32</size>
+                <baseAddress>0x40000</baseAddress>
+                <addressRange>0x00040000 - 0x0004001F</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>sdram_control</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>262176</offset>
+                <size>131040</size>
+                <baseAddress>0x40020</baseAddress>
+                <addressRange>0x00040020 - 0x0005FFFF</addressRange>
+        </LinkerRegion>
         <MemoryMap>
                 <slaveDescriptor>sdram_control</slaveDescriptor>
                 <addressRange>0x00000000 - 0x03FFFFFF</addressRange>
@@ -939,44 +968,26 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>key</slaveDescriptor>
+                <slaveDescriptor>pixel_dat</slaveDescriptor>
                 <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>ledr</slaveDescriptor>
+                <slaveDescriptor>img_addy</slaveDescriptor>
                 <addressRange>0x04001050 - 0x0400105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <slaveDescriptor>display_frame_mailbox</slaveDescriptor>
                 <addressRange>0x04001060 - 0x0400106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>display_frame_mailbox</slaveDescriptor>
-                <addressRange>0x04001070 - 0x0400107F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>ack_mailbox</slaveDescriptor>
-                <addressRange>0x04001080 - 0x0400108F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>data_mailbox</slaveDescriptor>
-                <addressRange>0x04001090 - 0x0400109F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>image_jtag</slaveDescriptor>
-                <addressRange>0x040010A0 - 0x040010A7</addressRange>
+                <slaveDescriptor>display_jtag</slaveDescriptor>
+                <addressRange>0x04001070 - 0x04001077</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>

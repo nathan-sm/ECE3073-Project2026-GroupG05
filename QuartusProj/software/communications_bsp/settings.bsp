@@ -2,13 +2,28 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 14, 2026 5:16:40 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778743000316</BspGeneratedUnixTimeStamp>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        <BspGeneratedTimeStamp>May 15, 2026 4:52:30 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778827950550</BspGeneratedUnixTimeStamp>
+=======
+        <BspGeneratedTimeStamp>May 15, 2026 1:01:38 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778814098615</BspGeneratedUnixTimeStamp>
+>>>>>>> 8199274 (Implement process -> display double buffer)
+=======
+        <BspGeneratedTimeStamp>May 15, 2026 2:31:52 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778819512904</BspGeneratedUnixTimeStamp>
+>>>>>>> a33872d (Add benchmarking code)
+=======
+        <BspGeneratedTimeStamp>May 15, 2026 4:34:36 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778826876273</BspGeneratedUnixTimeStamp>
+>>>>>>> b8d7354 (Implement single display mode switch on doubletap)
         <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/communications_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
-        <Cpu>comms</Cpu>
+        <Cpu>comms_proc</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
         <Setting>
                 <SettingName>hal.sys_clk_timer</SettingName>
@@ -194,7 +209,7 @@
                 <SettingName>hal.stdin</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>jtag_uart_1</Value>
+                <Value>comms_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDIN character-mode device. This setting is used by the ALT_STDIN family of defines in system.h.</Description>
@@ -206,7 +221,7 @@
                 <SettingName>hal.stdout</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>jtag_uart_1</Value>
+                <Value>comms_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDOUT character-mode device. This setting is used by the ALT_STDOUT family of defines in system.h.</Description>
@@ -218,7 +233,7 @@
                 <SettingName>hal.stderr</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>jtag_uart_1</Value>
+                <Value>comms_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDERR character-mode device. This setting is used by the ALT_STDERR family of defines in system.h.</Description>
@@ -794,7 +809,7 @@
                 <SettingName>hal.enable_reduced_device_drivers</SettingName>
                 <Identifier>ALT_USE_SMALL_DRIVERS</Identifier>
                 <Type>Boolean</Type>
-                <Value>0</Value>
+                <Value>1</Value>
                 <DefaultValue>0</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Certain drivers are compiled with reduced functionality to reduce code footprint. Not all drivers observe this setting. The altera_avalon_uart and altera_avalon_jtag_uart drivers switch from interrupt-driven to polled operation. CAUTION: Several device drivers are disabled entirely. These include the altera_avalon_cfi_flash, altera_avalon_epcs_flash_controller, and altera_avalon_lcd_16207 drivers. This can result in certain API (HAL flash access routines) to fail. You can define a symbol provided by each driver to prevent it from being removed. If true, adds -DALT_USE_SMALL_DRIVERS to ALT_CPPFLAGS in public.mk.</Description>
@@ -898,30 +913,6 @@
                 <Enabled>false</Enabled>
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
-        <LinkerRegion>
-                <regionName>sdram_control_BEFORE_RESET</regionName>
-                <memoryName>sdram_control</memoryName>
-                <offset>0</offset>
-                <size>8388608</size>
-                <baseAddress>0x0</baseAddress>
-                <addressRange>0x00000000 - 0x007FFFFF</addressRange>
-        </LinkerRegion>
-        <LinkerRegion>
-                <regionName>reset</regionName>
-                <memoryName>sdram_control</memoryName>
-                <offset>8388608</offset>
-                <size>32</size>
-                <baseAddress>0x800000</baseAddress>
-                <addressRange>0x00800000 - 0x0080001F</addressRange>
-        </LinkerRegion>
-        <LinkerRegion>
-                <regionName>sdram_control</regionName>
-                <memoryName>sdram_control</memoryName>
-                <offset>8388640</offset>
-                <size>8388576</size>
-                <baseAddress>0x800020</baseAddress>
-                <addressRange>0x00800020 - 0x00FFFFFF</addressRange>
-        </LinkerRegion>
         <MemoryMap>
                 <slaveDescriptor>sdram_control</slaveDescriptor>
                 <addressRange>0x00000000 - 0x03FFFFFF</addressRange>
@@ -935,38 +926,50 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>ack_mailbox</slaveDescriptor>
+                <slaveDescriptor>usec_counter</slaveDescriptor>
                 <addressRange>0x04001020 - 0x0400102F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>cam_redy</slaveDescriptor>
+                <slaveDescriptor>sw</slaveDescriptor>
                 <addressRange>0x04001030 - 0x0400103F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <slaveDescriptor>cam_redy</slaveDescriptor>
                 <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <slaveDescriptor>gsens_int</slaveDescriptor>
                 <addressRange>0x04001050 - 0x0400105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>data_mailbox</slaveDescriptor>
+                <slaveDescriptor>altpll_0</slaveDescriptor>
                 <addressRange>0x04001060 - 0x0400106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>jtag_uart_1</slaveDescriptor>
-                <addressRange>0x04001078 - 0x0400107F</addressRange>
+                <slaveDescriptor>data_mailbox</slaveDescriptor>
+                <addressRange>0x04001070 - 0x0400107F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>ack_mailbox</slaveDescriptor>
+                <addressRange>0x04001080 - 0x0400108F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>comms_jtag</slaveDescriptor>
+                <addressRange>0x04001090 - 0x04001097</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>

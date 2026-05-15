@@ -113,8 +113,8 @@ BSP_TYPE := hal
 # setting CDX is false
 
 # CPU Name 
-# setting CPU_NAME is comms
-CPU_NAME = comms
+# setting CPU_NAME is comms_proc
+CPU_NAME = comms_proc
 ELF_PATCH_FLAG  += --cpu_name $(CPU_NAME)
 
 # Hardware Divider present. 
@@ -207,7 +207,8 @@ ALT_CPPFLAGS += -DALT_NO_INSTRUCTION_EMULATION
 # access routines) to fail. You can define a symbol provided by each driver to 
 # prevent it from being removed. If true, adds -DALT_USE_SMALL_DRIVERS to 
 # ALT_CPPFLAGS in public.mk. none 
-# setting hal.enable_reduced_device_drivers is false
+# setting hal.enable_reduced_device_drivers is true
+ALT_CPPFLAGS += -DALT_USE_SMALL_DRIVERS
 
 # Turns on HAL runtime stack checking feature. Enabling this setting causes 
 # additional code to be placed into each subroutine call to generate an 
@@ -329,18 +330,18 @@ ALT_CFLAGS += -mgpopt=global
 
 # Slave descriptor of STDERR character-mode device. This setting is used by the 
 # ALT_STDERR family of defines in system.h. none 
-# setting hal.stderr is jtag_uart_1
-ELF_PATCH_FLAG  += --stderr_dev jtag_uart_1
+# setting hal.stderr is comms_jtag
+ELF_PATCH_FLAG  += --stderr_dev comms_jtag
 
 # Slave descriptor of STDIN character-mode device. This setting is used by the 
 # ALT_STDIN family of defines in system.h. none 
-# setting hal.stdin is jtag_uart_1
-ELF_PATCH_FLAG  += --stdin_dev jtag_uart_1
+# setting hal.stdin is comms_jtag
+ELF_PATCH_FLAG  += --stdin_dev comms_jtag
 
 # Slave descriptor of STDOUT character-mode device. This setting is used by the 
 # ALT_STDOUT family of defines in system.h. none 
-# setting hal.stdout is jtag_uart_1
-ELF_PATCH_FLAG  += --stdout_dev jtag_uart_1
+# setting hal.stdout is comms_jtag
+ELF_PATCH_FLAG  += --stdout_dev comms_jtag
 
 
 #------------------------------------------------------------------------------

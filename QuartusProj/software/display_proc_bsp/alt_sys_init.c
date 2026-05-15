@@ -1,10 +1,10 @@
 /*
  * alt_sys_init.c - HAL initialization source
  *
- * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'display_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Thu May 14 21:48:38 EST 2026
+ * Generated: Thu May 14 21:27:49 EST 2026
  */
 
 /*
@@ -66,10 +66,8 @@
  * Allocate the device storage
  */
 
-ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( IMAGE_PROC, image_proc);
-ALTERA_AVALON_JTAG_UART_INSTANCE ( IMAGE_JTAG, image_jtag);
-ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( ACK_MAILBOX, ack_mailbox);
-ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DATA_MAILBOX, data_mailbox);
+ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( DISPLAY_PROC, display_proc);
+ALTERA_AVALON_JTAG_UART_INSTANCE ( DISPLAY_JTAG, display_jtag);
 ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DISPLAY_FRAME_MAILBOX, display_frame_mailbox);
 
 /*
@@ -82,7 +80,7 @@ ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DISPLAY_FRAME_MAILBOX, display_frame_mai
 
 void alt_irq_init ( const void* base )
 {
-    ALTERA_NIOS2_GEN2_IRQ_INIT ( IMAGE_PROC, image_proc);
+    ALTERA_NIOS2_GEN2_IRQ_INIT ( DISPLAY_PROC, display_proc);
     alt_irq_cpu_enable_interrupts();
 }
 
@@ -93,8 +91,6 @@ void alt_irq_init ( const void* base )
 
 void alt_sys_init( void )
 {
-    ALTERA_AVALON_JTAG_UART_INIT ( IMAGE_JTAG, image_jtag);
-    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( ACK_MAILBOX, ack_mailbox);
-    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DATA_MAILBOX, data_mailbox);
+    ALTERA_AVALON_JTAG_UART_INIT ( DISPLAY_JTAG, display_jtag);
     ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DISPLAY_FRAME_MAILBOX, display_frame_mailbox);
 }

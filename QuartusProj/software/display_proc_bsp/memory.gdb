@@ -1,9 +1,9 @@
 # memory.gdb - GDB memory region definitions
 #
-# Machine generated for CPU 'comms_proc' in SOPC Builder design 'NiosSystem'
+# Machine generated for CPU 'display_proc' in SOPC Builder design 'NiosSystem'
 # SOPC Builder design path: ../../NiosSystem.sopcinfo
 #
-# Generated: Thu May 14 17:51:00 EST 2026
+# Generated: Thu May 14 21:27:49 EST 2026
 
 # DO NOT MODIFY THIS FILE
 #
