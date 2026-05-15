@@ -47,8 +47,10 @@ SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 // 1 = buffer is free for writing, 0 = buffer is locked by the image processing core
 volatile int freeBuffers[3] = {1, 1, 1};
 
-// Tracks the last camera configuration byte sent so we only re-send on change
-uint8_t gCamLastConfig = 0;
+// Camera config tracking
+#define CAM_QUAD_MASK  0x02
+#define CAM_WRITE_MASK 0x10
+uint8_t g_camLastConfig = 0x0;
 
 // ISR: called when the image processing core returns a buffer token via ACK mailbox
 static void mailbox_ack_isr(void* context) {
@@ -109,19 +111,17 @@ int main() {
     sharedDisplay->quadDisplayIndices[2] = 2;
     sharedDisplay->quadDisplayIndices[3] = 3;
 
-    // Send initial camera command to put it into a known state
-    uint8_t startupCmd = CAM_WRITE_MASK;
-    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startupCmd, 0, NULL, 0);
+    while (!IORD(CAM_REDY_BASE, 0));
+
+    // Initial camera setup command
+    uint8_t startup_cmd = CAM_WRITE_MASK;
+    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, 0, NULL, 0);
 
     printf("Comms init\n");
 
     while(1) {
         // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
         while (IORD(CAM_REDY_BASE, 0) == 0);
-
-        // Update shared quad mode flag from switches each iteration
-        // Core 0 reads this to know what frame size to request
-        sharedDisplay->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
 
         // 1. Find a safe, unused buffer
         int writeTarget = -1;
@@ -136,12 +136,15 @@ int main() {
             continue;
         }
 
-        freeBuffers[writeTarget] = 0; // Lock buffer
+        // Update shared quad mode flag from switches each iteration
+        // Core 0 reads this to know what frame size to request
+        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
 
-        // Check quad mode (set by the image processing core reading SW[0])
-        bool isQuad = sharedDisplay->isQuad;
+        free_buffers[write_target] = 0; // Lock buffer
 
-        // Build camera command — only set WRITE_MASK when the config has changed
+        bool isQuad = shared_display->isQuad;
+
+        // 3. Build camera command only set WRITE_MASK when config changes
         uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
         if (cmd != gCamLastConfig) {
             gCamLastConfig = cmd;
@@ -149,8 +152,7 @@ int main() {
         }
 
         uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
-        uint8_t* destPtr = (uint8_t*)((uint32_t)buffers[writeTarget]);
-//        uint8_t* dest_ptr = (uint8_t*)(buffers[0]);
+        uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
 
         alt_avalon_spi_command(
             SPI_0_BASE,

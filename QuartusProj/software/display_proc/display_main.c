@@ -8,11 +8,14 @@
 #include "memory_addresses.h"
 
 volatile int nextFrameReady = 0;
+volatile uint32_t bufToDraw = 0;
 uint32_t lastFrameTime = 0;
-uint32_t frameIndex = 0;
 
 SharedDisplayState *displayState = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
-uint8_t *processingBuffer = (uint8_t*)(PROCESSED_IMG_BUF);
+uint8_t *sourceBuffers[] = {
+		(uint8_t*)(PROCESSED_IMG_BUF_A),
+		(uint8_t*)(PROCESSED_IMG_BUF_B)
+};
 
 // ---- Display Functions ----
 
@@ -98,7 +101,7 @@ void display_fps(uint32_t elapsed) {
 static void display_frame_rx_isr(void *context)
 {
 	nextFrameReady = 1;
-	frameIndex = IORD(DISPLAY_FRAME_MAILBOX_BASE, 0);
+	bufToDraw = IORD(DISPLAY_FRAME_MAILBOX_BASE, 0);
 }
 
 int main()
@@ -137,17 +140,19 @@ int main()
 
 		int isQuad = displayState->isQuad;
 
+		uint8_t *bufferDrawPtr = sourceBuffers[bufToDraw];
+
 		if (isQuad)
 		{
 			// Display each quadrant using indices controlled by Core 0 double-tap
-			display_quad_image(processingBuffer, displayState->quadDisplayIndices[0], 0);
-			display_quad_image(processingBuffer, displayState->quadDisplayIndices[1], 1);
-			display_quad_image(processingBuffer, displayState->quadDisplayIndices[2], 2);
-			display_quad_image(processingBuffer, displayState->quadDisplayIndices[3], 3);
+			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[0], 0);
+			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[1], 1);
+			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[2], 2);
+			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[3], 3);
 		}
 		else
 		{
-			display_full_image(processingBuffer);
+			display_full_image(bufferDrawPtr);
 		}
 	}
 }

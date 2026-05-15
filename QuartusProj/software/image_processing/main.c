@@ -43,10 +43,15 @@ SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
 SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 
 // Processing output buffer � avoids writing into shared triple buffers
-uint8_t *processing_buffer = (uint8_t*)(PROCESSED_IMG_BUF);
+uint8_t *processing_buffers[] = {
+		(uint8_t*)(PROCESSED_IMG_BUF_A),
+		(uint8_t*)(PROCESSED_IMG_BUF_B)
+};
 
 volatile int newFrameReady = 0;
 volatile uint32_t currentFrameIndex = 0;
+
+uint32_t bufToSend = 0;
 
 // ISR: called when the communications core deposits a new frame buffer token
 static void mailbox_rx_isr(void* context) {
@@ -171,8 +176,6 @@ int main() {
 
 	printf("Img proc init.\n");
 
-	uint32_t frameCount = 0;
-
     while(1) {
     	// Busy wait until a new frame is ready
     	while (!newFrameReady);
@@ -188,7 +191,7 @@ int main() {
 
 		// Get source buffer (uncached)
 		uint8_t* source = (uint8_t*)(buffers[currently_displaying]);
-//		uint8_t* source = (uint8_t*)(buffers[0]);
+		uint8_t *processing_buffer = processing_buffers[bufToSend];
 
 //    	printf("Img proc received frame, address: %d\n", (int)source);
 
@@ -252,9 +255,10 @@ int main() {
 //		printf("Pixel value at 1 0 dest: %d\n", (int)(*(processing_buffer + 1)));
 
 		// Signal to display proc that the next frame is ready
-		frameCount++;
 		while (IORD(DISPLAY_FRAME_MAILBOX_BASE, 2) & 0x2);
-		IOWR(DISPLAY_FRAME_MAILBOX_BASE, 0, frameCount);
+		IOWR(DISPLAY_FRAME_MAILBOX_BASE, 0, bufToSend);
+
+		bufToSend ^= 0x1;
     }
 
     return 0;
