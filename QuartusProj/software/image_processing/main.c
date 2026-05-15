@@ -114,37 +114,54 @@ void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
 }
 
 void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height) {
-	// detecting vertical (Gx) and horizontal (Gy) edges
-	int kernel_x[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-	int kernel_y[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+    int threshold = 60;
 
-	int threshold = 60;
+    // Go through image by rows, skipping the outer pixel border
+    for (int i = 1; i < height - 1; i++) {
 
-	for (int i = 1; i < height - 1; i++) {
-		for (int j = 1; j < width -1; j++) {
+        // Pre-compute the memory address for the 3 rows we are currently looking at
+        // This is much faster than calculating (i * width) for every single pixel
+        const uint8_t *row_above = input + (i - 1) * width;
+        const uint8_t *row_curr  = input + i       * width;
+        const uint8_t *row_below = input + (i + 1) * width;
+        uint8_t *out_row         = output + i      * width;
 
-			int gx = 0;
-			int gy = 0;
+        // Go through the current row for each pixel
+        for (int j = 1; j < width - 1; j++) {
 
-			for (int ki = -1; ki <= 1; ki++) {
-				for (int kj = -1; kj <= 1; kj++) {
-					int pixel = input[(i + ki) * width + (j + kj)];
-					gx += pixel * kernel_x[(ki+1)*3 + (kj+1)];
-					gy += pixel * kernel_y[(ki+1)*3 + (kj+1)];
-				}
-			}
+            // Load neighbouring pixels directly from the cached row pointers
+            int tl = row_above[j - 1];
+            int tc = row_above[j];
+            int tr = row_above[j + 1];
+            int ml = row_curr [j - 1];
+            int mr = row_curr [j + 1];
+            int bl = row_below[j - 1];
+            int bc = row_below[j];
+            int br = row_below[j + 1];
 
-			int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
-			if (magnitude > 255) magnitude = 255;
-			output[i * width + j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
-		}
-	}
+            // Calculate horizontal (gx) and vertical (gy) edge strength using bit shifts (<< 1).
+            // This completely unrolls the 3x3 loop and skips all zero multiplications!
+            int gx = (tr - tl) + ((mr - ml) << 1) + (br - bl);
+            int gy = (bl - tl) + ((bc - tc) << 1) + (br - tr);
 
-	// zero border pixels
-	for (int x = 0; x < width; x++) output[x] = 0;
-	for (int x = 0; x < width; x++) output[(height -1)*width + x] = 0;
-	for (int y = 0; y < height; y++) output[y*width] = 0;
-	for (int y = 0; y < height; y++) output[y*width + (width-1)] = 0;
+            // Absolute value without branching (if-statements)
+            int abs_gx = gx < 0 ? -gx : gx;
+            int abs_gy = gy < 0 ? -gy : gy;
+
+            // Get total edge strength and cap value at 255 to prevent overflow
+            int magnitude = abs_gx + abs_gy;
+            if (magnitude > 255) magnitude = 255;
+
+            // If edge is strong, draw it. If not, set to black (0).
+            out_row[j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
+        }
+    }
+
+    // Zero the border pixels
+    for (int x = 0; x < width; x++)  output[x] = 0;
+    for (int x = 0; x < width; x++)  output[(height - 1) * width + x] = 0;
+    for (int y = 0; y < height; y++) output[y * width] = 0;
+    for (int y = 0; y < height; y++) output[y * width + (width - 1)] = 0;
 }
 
 void process_rgb_blur(uint16_t* rgb_in, uint16_t* rgb_out, int width, int height) {
