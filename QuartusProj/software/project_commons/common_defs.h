@@ -6,10 +6,12 @@
 #define IMAGE_WIDTH 320
 #define IMAGE_HEIGHT 240
 #define IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)
+#define IMAGE_BYTES (IMAGE_SIZE + (IMAGE_SIZE / 2)) // 115200 Bytes for 12-bit packed
 
 #define QUAD_IMAGE_WIDTH 160
 #define QUAD_IMAGE_HEIGHT 120
 #define QUAD_IMAGE_SIZE (QUAD_IMAGE_WIDTH * QUAD_IMAGE_HEIGHT)
+#define QUAD_IMAGE_BYTES (QUAD_IMAGE_SIZE + (QUAD_IMAGE_SIZE / 2)) // 28800 Bytes
 
 // Struct to hold the accelerometer data safely
 typedef struct {

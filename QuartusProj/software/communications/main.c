@@ -27,7 +27,9 @@ SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
 volatile int free_buffers[3] = {1, 1, 1}; // 1 = free, 0 = in use
 
 // Camera config tracking
+#define CAM_RGB_MASK   0x01
 #define CAM_QUAD_MASK  0x02
+#define CAM_PACK_MASK  0x04
 #define CAM_WRITE_MASK 0x10
 uint8_t g_camLastConfig = 0x0;
 
@@ -93,8 +95,8 @@ int main() {
     while (!IORD(CAM_REDY_BASE, 0));
 
     // Initial camera setup command
-    uint8_t startup_cmd = CAM_WRITE_MASK;
-    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, IMAGE_SIZE, buffers[0], 0);
+    uint8_t startup_cmd = CAM_RGB_MASK | CAM_PACK_MASK | CAM_WRITE_MASK;
+    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, IMAGE_BYTES, buffers[0], 0);
 
     sharedTimingData->frameReadTime = 0;
 
@@ -126,13 +128,17 @@ int main() {
         bool isQuad = shared_display->isQuad;
 
         // 3. Build camera command only set WRITE_MASK when config changes
-        uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
+        uint8_t cmd = CAM_RGB_MASK | CAM_PACK_MASK | (isQuad ? CAM_QUAD_MASK : 0x00);
         if (cmd != g_camLastConfig) {
-            g_camLastConfig = cmd;
+        	g_camLastConfig = cmd;
             cmd |= CAM_WRITE_MASK;
+            alt_avalon_spi_command(SPI_0_BASE, 0, 1, &cmd, 0, NULL, 0);
+            free_buffers[write_target] = 1;
+            continue; // Drop the corrupted frame
         }
 
-        uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
+        // Uses BYTES to pull the 1.5x packed payload
+        uint32_t readSize = isQuad ? QUAD_IMAGE_BYTES : IMAGE_BYTES;
         uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
 
         uint32_t frameReadBeginTime = IORD(USEC_COUNTER_BASE, 0);

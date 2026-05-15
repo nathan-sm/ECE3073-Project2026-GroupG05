@@ -11,9 +11,9 @@ volatile int nextFrameReady = 0;
 volatile uint32_t bufToDraw = 0;
 
 SharedDisplayState *displayState = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
-uint8_t *sourceBuffers[] = {
-		(uint8_t*)(PROCESSED_IMG_BUF_A),
-		(uint8_t*)(PROCESSED_IMG_BUF_B)
+uint16_t *sourceBuffers[] = {
+		(uint16_t*)(PROCESSED_IMG_BUF_A),
+		(uint16_t*)(PROCESSED_IMG_BUF_B)
 };
 
 SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
@@ -21,7 +21,7 @@ SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
 // ---- Display Functions ----
 
 // Write a full image to pixel buffer using optimized 32-bit reads
-void display_full_image(uint8_t *buffer)
+void display_full_image(uint16_t *buffer)
 {
     uint32_t* src_ptr32 = (uint32_t*)(buffer);
     uint32_t* const src_end32 = (uint32_t*)(buffer + IMAGE_SIZE);
@@ -32,23 +32,17 @@ void display_full_image(uint8_t *buffer)
         uint32_t block = *src_ptr32++;
 
         IOWR(IMG_ADDY_BASE, 0, addr++);
-        IOWR(PIXEL_DAT_BASE, 0, (block >> 4) & 0xF);
+        IOWR(PIXEL_DAT_BASE, 0, block & 0x0FFF);
 
         IOWR(IMG_ADDY_BASE, 0, addr++);
-        IOWR(PIXEL_DAT_BASE, 0, (block >> 12) & 0xF);
-
-        IOWR(IMG_ADDY_BASE, 0, addr++);
-        IOWR(PIXEL_DAT_BASE, 0, (block >> 20) & 0xF);
-
-        IOWR(IMG_ADDY_BASE, 0, addr++);
-        IOWR(PIXEL_DAT_BASE, 0, (block >> 28) & 0xF);
+        IOWR(PIXEL_DAT_BASE, 0, (block >> 16) & 0x0FFF);
     }
 }
 
 // Write a quarter image to a specific quadrant of the pixel buffer
-void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
+void display_quad_image(uint16_t *buffer, uint32_t imageIndex, uint32_t displayIndex)
 {
-    uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
+    uint32_t* src32 = (uint32_t*)(&buffer[imageIndex * QUAD_IMAGE_SIZE]);
     uint32_t pixelBufferAddr = 0;
 
     if (displayIndex & 0x1)
@@ -61,11 +55,14 @@ void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIn
     }
 
     for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++) {
-        for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++) {
-            IOWR(IMG_ADDY_BASE, 0, pixelBufferAddr);
-            IOWR(PIXEL_DAT_BASE, 0, buffer[imgAddr] >> 4);
-            imgAddr++;
-            pixelBufferAddr++;
+        for (uint32_t j = 0; j < (QUAD_IMAGE_WIDTH / 2); j++) {
+            uint32_t block = *src32++;
+
+            IOWR(IMG_ADDY_BASE, 0, pixelBufferAddr++);
+            IOWR(PIXEL_DAT_BASE, 0, block & 0x0FFF);
+
+            IOWR(IMG_ADDY_BASE, 0, pixelBufferAddr++);
+            IOWR(PIXEL_DAT_BASE, 0, (block >> 16) & 0x0FFF);
         }
         pixelBufferAddr += IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
     }
@@ -143,7 +140,7 @@ int main()
 		nextFrameReady = 0;
 
 		int isQuad = displayState->isQuad;
-		uint8_t *bufferDrawPtr = sourceBuffers[bufToDraw];
+		uint16_t *bufferDrawPtr = sourceBuffers[bufToDraw];
 
 		// time the display
 		uint32_t displayBeginTime = IORD(USEC_COUNTER_BASE, 0);

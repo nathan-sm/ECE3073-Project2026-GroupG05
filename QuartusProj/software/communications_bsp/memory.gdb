@@ -3,7 +3,7 @@
 # Machine generated for CPU 'comms_proc' in SOPC Builder design 'NiosSystem'
 # SOPC Builder design path: ../../NiosSystem.sopcinfo
 #
-# Generated: Thu May 14 17:51:00 EST 2026
+# Generated: Fri May 15 17:38:44 EST 2026
 
 # DO NOT MODIFY THIS FILE
 #

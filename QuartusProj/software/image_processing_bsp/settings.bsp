@@ -2,11 +2,11 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 15, 2026 2:31:45 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778819505515</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/image_processing_bsp</BspGeneratedLocation>
+        <BspGeneratedTimeStamp>15/05/2026 6:57:26 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778835446720</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>C:\Users\ritwa\Documents\GitHub\ECE3073-Project2026-GroupG05\QuartusProj\software\image_processing_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
-        <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>
+        <SopcDesignFile>..\..\NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
         <Cpu>image_proc</Cpu>
         <SchemaVersion>1.9</SchemaVersion>

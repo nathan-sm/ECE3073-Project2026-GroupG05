@@ -3,6 +3,9 @@
 	<name>project_commons</name>
 	<comment></comment>
 	<projects>
+		<project>communications</project>
+		<project>display_proc</project>
+		<project>image_processing</project>
 	</projects>
 	<buildSpec>
 	</buildSpec>

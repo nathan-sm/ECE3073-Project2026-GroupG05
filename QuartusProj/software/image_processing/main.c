@@ -25,10 +25,10 @@ uint8_t* buffers[3] = {
 SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
 SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 
-// Processing output buffer � avoids writing into shared triple buffers
-uint8_t *processing_buffers[] = {
-		(uint8_t*)(PROCESSED_IMG_BUF_A),
-		(uint8_t*)(PROCESSED_IMG_BUF_B)
+// Processing output buffer  avoids writing into shared triple buffers
+uint16_t *processing_buffers[] = {
+		(uint16_t*)(PROCESSED_IMG_BUF_A),
+		(uint16_t*)(PROCESSED_IMG_BUF_B)
 };
 
 SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
@@ -38,6 +38,20 @@ volatile uint32_t current_frame_index = 0;
 
 uint32_t bufToSend = 0;
 
+// Map processing arrays explicitly into the massive shared SDRAM void
+// to prevent the Image Core's .bss partition from overflowing.
+#define SCRATCHPAD_BASE (SHARED_TIMING_DATA + 1024) // Start safely after timing data
+
+uint16_t *unpacked_rgb     = (uint16_t*)(SCRATCHPAD_BASE);
+uint8_t  *grayscale_buffer = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 2));
+uint8_t  *edge_buffer      = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 3));
+uint8_t  *r_chan           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 4));
+uint8_t  *g_chan           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 5));
+uint8_t  *b_chan           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 6));
+uint8_t  *r_blur           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 7));
+uint8_t  *g_blur           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 8));
+uint8_t  *b_blur           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 9));
+
 static void mailbox_rx_isr(void* context) {
     current_frame_index = IORD(DATA_MAILBOX_BASE, 0);
     new_frame_ready = 1;
@@ -45,15 +59,11 @@ static void mailbox_rx_isr(void* context) {
 
 // ---- Image Processing Functions ----
 
-void process_flip(uint8_t *input, uint8_t *output, int width, int height, int bpp)
+void process_flip(uint16_t *input, uint16_t *output, int width, int height)
 {
     int totalPixels = width * height;
     for (int i = 0; i < totalPixels; i++) {
-        int srcIdx = (totalPixels - 1 - i) * bpp;
-        int dstIdx = i * bpp;
-        for (int b = 0; b < bpp; b++) {
-            output[dstIdx + b] = input[srcIdx + b];
-        }
+        output[i] = input[totalPixels - 1 - i];
     }
 }
 
@@ -137,6 +147,44 @@ void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height
 	for (int y = 0; y < height; y++) output[y*width + (width-1)] = 0;
 }
 
+void process_rgb_blur(uint16_t* rgb_in, uint16_t* rgb_out, int width, int height) {
+    int total = width * height;
+    int blur_kernel[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+    for(int i = 0; i < total; i++) {
+        r_chan[i] = (rgb_in[i] >> 8) & 0xF;
+        g_chan[i] = (rgb_in[i] >> 4) & 0xF;
+        b_chan[i] = rgb_in[i] & 0xF;
+    }
+
+    convolve(r_chan, r_blur, blur_kernel, width, height);
+    convolve(g_chan, g_blur, blur_kernel, width, height);
+    convolve(b_chan, b_blur, blur_kernel, width, height);
+
+    for(int i = 0; i < total; i++) {
+        rgb_out[i] = ((r_blur[i] & 0xF) << 8) | ((g_blur[i] & 0xF) << 4) | (b_blur[i] & 0xF);
+    }
+}
+
+void process_rgb_edges(uint16_t* rgb_in, uint16_t* rgb_out, int width, int height) {
+    int total = width * height;
+
+    for(int i = 0; i < total; i++) {
+        uint16_t p = rgb_in[i];
+        uint8_t r = ((p >> 8) & 0xF) * 17;
+        uint8_t g = ((p >> 4) & 0xF) * 17;
+        uint8_t b = (p & 0xF) * 17;
+        grayscale_buffer[i] = (r * 76 + g * 150 + b * 29) >> 8;
+    }
+
+    sobel_edge_detection(grayscale_buffer, edge_buffer, width, height);
+
+    for(int i = 0; i < total; i++) {
+        uint8_t val = edge_buffer[i] >> 4;
+        rgb_out[i] = (val << 8) | (val << 4) | val;
+    }
+}
+
 int main() {
 	printf("Img proc main.\n");
 
@@ -174,12 +222,27 @@ int main() {
 
 		// Get source buffer (uncached)
 		uint8_t* source = (uint8_t*)(buffers[currently_displaying]);
-		uint8_t *processing_buffer = processing_buffers[bufToSend];
+		uint16_t *processing_buffer = processing_buffers[bufToSend];
 
 //    	printf("Img proc received frame, address: %d\n", (int)source);
 
 		uint8_t isQuad = shared_display->isQuad;
 		int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
+		int num_pixels = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
+
+        // Unpack Packed RGB Data via Nibble Shuffle
+        int byte_idx = 0;
+        for (int i = 0; i < num_pixels; i += 2) {
+            uint8_t b0 = source[byte_idx++];
+            uint8_t b1 = source[byte_idx++];
+            uint8_t b2 = source[byte_idx++];
+
+            uint16_t p0_raw = (b0 << 4) | (b1 >> 4);
+            uint16_t p1_raw = ((b1 & 0x0F) << 8) | b2;
+
+            unpacked_rgb[i]   = (((p0_raw >> 4) & 0xF) << 8) | ((p0_raw & 0xF) << 4) | ((p0_raw >> 8) & 0xF);
+            unpacked_rgb[i+1] = (((p1_raw >> 4) & 0xF) << 8) | ((p1_raw & 0xF) << 4) | ((p1_raw >> 8) & 0xF);
+        }
 
 		if (isQuad)
 		{
@@ -189,22 +252,22 @@ int main() {
 			uint32_t noFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			for (size_t i = 0; i < QUAD_IMAGE_SIZE; i++)
 			{
-				processing_buffer[i] = source[i];
+				processing_buffer[i] = unpacked_rgb[i];
 			}
 			uint32_t noFilterEndTime = IORD(USEC_COUNTER_BASE, 0);
 			sharedTimingData->noFilterTime = noFilterEndTime - noFilterBeginTime;
 
 			// Slot 1: flip
 			uint32_t flipBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			process_flip(source,
+			process_flip(unpacked_rgb,
 						 processing_buffer + QUAD_IMAGE_SIZE,
-						 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
+						 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 			uint32_t flipEndTime = IORD(USEC_COUNTER_BASE, 0);
 			sharedTimingData->flipTime = flipEndTime - flipBeginTime;
 
 			// Slot 2: blur
 			uint32_t blurBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			box_blur(source,
+			process_rgb_blur(unpacked_rgb,
 					 processing_buffer + 2 * QUAD_IMAGE_SIZE,
 					 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 			uint32_t blurEndTime = IORD(USEC_COUNTER_BASE, 0);
@@ -212,7 +275,7 @@ int main() {
 
 			// Slot 3: edge
 			uint32_t sobelBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			sobel_edge_detection(source,
+			process_rgb_edges(unpacked_rgb,
 								 processing_buffer + 3 * QUAD_IMAGE_SIZE,
 								 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 			uint32_t sobelEndTime = IORD(USEC_COUNTER_BASE, 0);
@@ -224,22 +287,22 @@ int main() {
 			uint32_t fullFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
 			switch (processMode) {
 				case PROC_FLIP:
-					process_flip(source, processing_buffer,
-								 IMAGE_WIDTH, IMAGE_HEIGHT, 1);
+					process_flip(unpacked_rgb, processing_buffer,
+								 IMAGE_WIDTH, IMAGE_HEIGHT);
 					break;
 				case PROC_BLUR:
-					box_blur(source, processing_buffer,
+					process_rgb_blur(unpacked_rgb, processing_buffer,
 							 IMAGE_WIDTH, IMAGE_HEIGHT);
 					break;
 				case PROC_EDGE:
-					sobel_edge_detection(source, processing_buffer,
+					process_rgb_edges(unpacked_rgb, processing_buffer,
 										 IMAGE_WIDTH, IMAGE_HEIGHT);
 					break;
 				default: // PROC_RAW
 //					printf("No filter, copy %d to %d\n", (int)source, (int)processing_buffer);
 					for (size_t i = 0; i < IMAGE_SIZE; i++)
 					{
-						processing_buffer[i] = source[i];
+						processing_buffer[i] = unpacked_rgb[i];
 					}
 					break;
 			}
