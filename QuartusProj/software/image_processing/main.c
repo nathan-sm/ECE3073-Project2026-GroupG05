@@ -25,7 +25,7 @@ uint8_t* buffers[3] = {
 SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
 SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 
-// Processing output buffer  avoids writing into shared triple buffers
+// Processing output buffer - avoids writing into shared triple buffers
 uint16_t *processing_buffers[] = {
 		(uint16_t*)(PROCESSED_IMG_BUF_A),
 		(uint16_t*)(PROCESSED_IMG_BUF_B)
@@ -228,7 +228,9 @@ int main() {
 
 		uint8_t isQuad = shared_display->isQuad;
 		int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
-		int num_pixels = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
+
+        // ALWAYS unpack the full frame from the camera
+        int num_pixels = IMAGE_SIZE;
 
         // Unpack Packed RGB Data via Nibble Shuffle
         int byte_idx = 0;
@@ -240,8 +242,9 @@ int main() {
             uint16_t p0_raw = (b0 << 4) | (b1 >> 4);
             uint16_t p1_raw = ((b1 & 0x0F) << 8) | b2;
 
-            unpacked_rgb[i]   = (((p0_raw >> 4) & 0xF) << 8) | ((p0_raw & 0xF) << 4) | ((p0_raw >> 8) & 0xF);
-            unpacked_rgb[i+1] = (((p1_raw >> 4) & 0xF) << 8) | ((p1_raw & 0xF) << 4) | ((p1_raw >> 8) & 0xF);
+            // FIX: Swapped assignments ([i+1] first) to fix the jagged zipper effect
+            unpacked_rgb[i+1] = (((p0_raw >> 4) & 0xF) << 8) | ((p0_raw & 0xF) << 4) | ((p0_raw >> 8) & 0xF);
+            unpacked_rgb[i]   = (((p1_raw >> 4) & 0xF) << 8) | ((p1_raw & 0xF) << 4) | ((p1_raw >> 8) & 0xF);
         }
 
 		if (isQuad)
@@ -250,16 +253,21 @@ int main() {
 
 			// Slot 0: raw
 			uint32_t noFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			for (size_t i = 0; i < QUAD_IMAGE_SIZE; i++)
-			{
-				processing_buffer[i] = unpacked_rgb[i];
-			}
+
+            // SOFTWARE DOWNSAMPLING: Shrink 320x240 to 160x120 by skipping every other pixel
+            uint16_t* quad_source = processing_buffer; // Write directly into Slot 0
+            for (int y = 0; y < QUAD_IMAGE_HEIGHT; y++) {
+                for (int x = 0; x < QUAD_IMAGE_WIDTH; x++) {
+                    quad_source[y * QUAD_IMAGE_WIDTH + x] = unpacked_rgb[(y * 2) * IMAGE_WIDTH + (x * 2)];
+                }
+            }
+
 			uint32_t noFilterEndTime = IORD(USEC_COUNTER_BASE, 0);
 			sharedTimingData->noFilterTime = noFilterEndTime - noFilterBeginTime;
 
 			// Slot 1: flip
 			uint32_t flipBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			process_flip(unpacked_rgb,
+			process_flip(quad_source,
 						 processing_buffer + QUAD_IMAGE_SIZE,
 						 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 			uint32_t flipEndTime = IORD(USEC_COUNTER_BASE, 0);
@@ -267,7 +275,7 @@ int main() {
 
 			// Slot 2: blur
 			uint32_t blurBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			process_rgb_blur(unpacked_rgb,
+			process_rgb_blur(quad_source,
 					 processing_buffer + 2 * QUAD_IMAGE_SIZE,
 					 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 			uint32_t blurEndTime = IORD(USEC_COUNTER_BASE, 0);
@@ -275,7 +283,7 @@ int main() {
 
 			// Slot 3: edge
 			uint32_t sobelBeginTime = IORD(USEC_COUNTER_BASE, 0);
-			process_rgb_edges(unpacked_rgb,
+			process_rgb_edges(quad_source,
 								 processing_buffer + 3 * QUAD_IMAGE_SIZE,
 								 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 			uint32_t sobelEndTime = IORD(USEC_COUNTER_BASE, 0);

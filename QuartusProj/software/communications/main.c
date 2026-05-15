@@ -127,30 +127,23 @@ int main() {
 
         bool isQuad = shared_display->isQuad;
 
-        // 3. Build camera command only set WRITE_MASK when config changes
-        uint8_t cmd = CAM_RGB_MASK | CAM_PACK_MASK | (isQuad ? CAM_QUAD_MASK : 0x00);
-        if (cmd != g_camLastConfig) {
-        	g_camLastConfig = cmd;
-            cmd |= CAM_WRITE_MASK;
-            alt_avalon_spi_command(SPI_0_BASE, 0, 1, &cmd, 0, NULL, 0);
-            free_buffers[write_target] = 1;
-            continue; // Drop the corrupted frame
-        }
+		// ALWAYS request a full RGB Packed frame. Do not trust the ESP-CAM to downsample.
+		uint8_t cmd = CAM_RGB_MASK | CAM_PACK_MASK;
+		if (cmd != g_camLastConfig) {
+			g_camLastConfig = cmd;
+			cmd |= CAM_WRITE_MASK;
+			alt_avalon_spi_command(SPI_0_BASE, 0, 1, &cmd, 0, NULL, 0);
+			free_buffers[write_target] = 1;
+			continue;
+		}
 
-        // Uses BYTES to pull the 1.5x packed payload
-        uint32_t readSize = isQuad ? QUAD_IMAGE_BYTES : IMAGE_BYTES;
-        uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
+		// ALWAYS read the full 320x240 frame (115,200 bytes)
+		uint32_t readSize = IMAGE_BYTES;
+		uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
 
-        uint32_t frameReadBeginTime = IORD(USEC_COUNTER_BASE, 0);
-        alt_avalon_spi_command(
-            SPI_0_BASE,
-            0,
-            1,
-            &cmd,
-            readSize,
-            dest_ptr,
-            0
-        );
+		uint32_t frameReadBeginTime = IORD(USEC_COUNTER_BASE, 0);
+		alt_avalon_spi_command(SPI_0_BASE, 0, 1, &cmd, readSize, dest_ptr, 0);
+
         uint32_t frameReadEndTime = IORD(USEC_COUNTER_BASE, 0);
         sharedTimingData->frameReadTime = frameReadEndTime - frameReadBeginTime;
 
