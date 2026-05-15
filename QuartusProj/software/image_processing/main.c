@@ -80,6 +80,7 @@ void process_flip(uint8_t *input, uint8_t *output, int width, int height, int bp
     }
 }
 
+// task 2 convolution
 void convolve(uint8_t *inputImage, uint8_t *outputImage, int *kernel, int width, int height) {
 	// iterate through every row and column skipping the borders
 	for (int i = 1; i < height - 1; i++) {
@@ -117,52 +118,78 @@ void convolve(uint8_t *inputImage, uint8_t *outputImage, int *kernel, int width,
 	for (int y = 0; y < height; y++) outputImage[y*width + (width - 1)] = 0;
 }
 
-void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
-	// 3x3 box kernel : all values = 1
-	// convolve will divide by total_weight = 9, giving average
-	int blur_kernel[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+// optimised blur and sobel - unrolled kernels, row pointers, no division
 
-	// run a pass of convolution with box kernel
-	convolve(input, output, blur_kernel, width, height);
+void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
+    // zero border rows
+    memset(output, 0, width);
+    memset(output + (height - 1) * width, 0, width);
+
+    for (int i = 1; i < height - 1; i++) {
+        // row pointers avoid (i+ki)*width multiplies in the inner loop
+        uint8_t *row_top = input + (i - 1) * width;
+        uint8_t *row_mid = input +  i      * width;
+        uint8_t *row_bot = input + (i + 1) * width;
+        uint8_t *out_row = output + i * width;
+
+        out_row[0] = 0;
+
+        for (int j = 1; j < width - 1; j++) {
+            // sum all 9 neighbours directly, no kernel array needed
+            int sum = row_top[j-1] + row_top[j] + row_top[j+1]
+                    + row_mid[j-1] + row_mid[j] + row_mid[j+1]
+                    + row_bot[j-1] + row_bot[j] + row_bot[j+1];
+
+            // divide by 9 via multiply-shift: (sum * 7282) >> 16
+            // avoids expensive software division on nios ii
+            out_row[j] = (uint8_t)((sum * 7282) >> 16);
+        }
+
+        out_row[width - 1] = 0;
+    }
 }
 
 void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height) {
-	// detecting vertical (Gx) and horizontal (Gy) edges
-	int kernel_x[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-	int kernel_y[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+    int threshold = 60;
 
-	int threshold = 60;
+    memset(output, 0, width);
+    memset(output + (height - 1) * width, 0, width);
 
-	for (int i = 1; i < height - 1; i++) {
-		for (int j = 1; j < width -1; j++) {
+    for (int i = 1; i < height - 1; i++) {
+        uint8_t *row_top = input + (i - 1) * width;
+        uint8_t *row_mid = input +  i      * width;
+        uint8_t *row_bot = input + (i + 1) * width;
+        uint8_t *out_row = output + i * width;
 
-			int gx = 0;
-			int gy = 0;
+        out_row[0] = 0;
 
-			for (int ki = -1; ki <= 1; ki++) {
-				for (int kj = -1; kj <= 1; kj++) {
-					int pixel = input[(i + ki) * width + (j + kj)];
-					gx += pixel * kernel_x[(ki+1)*3 + (kj+1)];
-					gy += pixel * kernel_y[(ki+1)*3 + (kj+1)];
-				}
-			}
+        for (int j = 1; j < width - 1; j++) {
+            // only read pixels with non-zero kernel weights (8 of 9)
+            int tl = row_top[j - 1];
+            int tc = row_top[j];
+            int tr = row_top[j + 1];
+            int ml = row_mid[j - 1];
+            int mr = row_mid[j + 1];
+            int bl = row_bot[j - 1];
+            int bc = row_bot[j];
+            int br = row_bot[j + 1];
 
-			int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
-			if (magnitude > 255) magnitude = 255;
-			output[i * width + j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
-		}
-	}
+            // gx: [-1 0 1; -2 0 2; -1 0 1] — adds/subs/shifts only
+            int gx = (tr - tl) + ((mr - ml) << 1) + (br - bl);
 
-	// zero border pixels
-	for (int x = 0; x < width; x++) output[x] = 0;
-	for (int x = 0; x < width; x++) output[(height -1)*width + x] = 0;
-	for (int y = 0; y < height; y++) output[y*width] = 0;
-	for (int y = 0; y < height; y++) output[y*width + (width-1)] = 0;
+            // gy: [-1 -2 -1; 0 0 0; 1 2 1]
+            int gy = (bl - tl) + ((bc - tc) << 1) + (br - tr);
+
+            int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
+            if (magnitude > 255) magnitude = 255;
+            out_row[j] = (magnitude >= threshold) ? (uint8_t)magnitude : 0;
+        }
+
+        out_row[width - 1] = 0;
+    }
 }
 
-// ---- Display Functions ----
-
-// Write a full image to pixel buffer using optimized 32-bit reads
+// ---- display functions ----
 void display_full_image(uint8_t *buffer)
 {
     volatile int* const pixel_dat_ptr = (volatile int*)(PIXEL_DAT_BASE | 0x80000000);
