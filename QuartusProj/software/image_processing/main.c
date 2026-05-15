@@ -7,12 +7,14 @@
 // Created Date: 2026
 // version = '1.0'
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #include <stdint.h>
 #include <string.h>
 #include "system.h"
 #include "io.h"
 #include "sys/alt_irq.h"
-#include <stdlib.h>
 
 #include "common_defs.h"
 #include "memory_addresses.h"
@@ -37,49 +39,26 @@ uint8_t* buffers[3] = {
     (uint8_t*)(IMAGE_READ_BUF_C)
 };
 
-SharedAccelData* sharedAccel = (SharedAccelData*)(SHARED_ACCEL_DATA);
-SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE | UNCACHED_MEM_MASK);
+SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
+SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
 
-// Scratch buffer for processing output — avoids writing into the shared triple buffers
-uint8_t processingBuffer[IMAGE_SIZE];
+// Processing output buffer � avoids writing into shared triple buffers
+uint8_t *processing_buffers[] = {
+		(uint8_t*)(PROCESSED_IMG_BUF_A),
+		(uint8_t*)(PROCESSED_IMG_BUF_B)
+};
 
-volatile int newFrameReady = 0;
-volatile uint32_t currentFrameIndex = 0;
+SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
+
+volatile int new_frame_ready = 0;
+volatile uint32_t current_frame_index = 0;
+
+uint32_t bufToSend = 0;
 
 // ISR: called when the communications core deposits a new frame buffer token
 static void mailbox_rx_isr(void* context) {
     currentFrameIndex = IORD(DATA_MAILBOX_BASE, 0);
     newFrameReady = 1;
-}
-
-// Writes the current FPS (derived from elapsed microseconds) to the 7-segment displays.
-// @param elapsed Microseconds elapsed since the previous frame was delivered
-void display_fps(uint32_t elapsed) {
-    if (elapsed == 0) { return; } // prevent divide-by-zero on the first frame
-
-    // Store 100x FPS so we can use integer arithmetic for the decimal digit
-    uint32_t fps100 = 100000000 / elapsed;
-
-    const uint8_t SEG[10] = {
-        0xC0, 0xF9, 0xA4, 0xB0, 0x99,
-        0x92, 0x82, 0xF8, 0x80, 0x90
-    };
-
-    int d3 = (fps100 / 1000) % 10;
-    int d2 = (fps100 / 100)  % 10;
-    int d1 = (fps100 / 10)   % 10;
-    int d0 =  fps100         % 10;
-
-    uint8_t hex3 = SEG[d3];
-    uint8_t hex2 = SEG[d2] & ~(1 << 7); // decimal point on HEX2
-    uint8_t hex1 = SEG[d1];
-    uint8_t hex0 = SEG[d0];
-
-    uint32_t hex02 = ((uint32_t)hex2 << 16) | ((uint32_t)hex1 << 8) | hex0;
-    uint32_t hex35 = ((uint32_t)HEX_BLANK << 16) | ((uint32_t)HEX_BLANK << 8) | hex3;
-
-    IOWR(HEX20_BASE, 0, hex02);
-    IOWR(HEX53_BASE, 0, hex35);
 }
 
 // ---- Image Processing Functions ----
@@ -182,69 +161,10 @@ void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height
     for (int y = 0; y < height; y++) { output[y * width + (width - 1)] = 0; }
 }
 
-// ---- Display Functions ----
-
-// Writes a full 320x240 image to the pixel buffer using 32-bit reads for efficiency.
-// @param buffer Pointer to the source greyscale image (IMAGE_SIZE bytes)
-void display_full_image(uint8_t *buffer) {
-    volatile int* const pixelDatPtr = (volatile int*)(PIXEL_DAT_BASE | UNCACHED_MEM_MASK);
-    volatile int* const imgAddyPtr  = (volatile int*)(IMG_ADDY_BASE  | UNCACHED_MEM_MASK);
-
-    uint32_t* srcPtr32 = (uint32_t*)((uint32_t)buffer | UNCACHED_MEM_MASK);
-    uint32_t* const srcEnd32 = (uint32_t*)(((uint32_t)buffer + IMAGE_SIZE) | UNCACHED_MEM_MASK);
-
-    int addr = 0;
-
-    while (srcPtr32 < srcEnd32) {
-        uint32_t block = *srcPtr32++;
-
-        *imgAddyPtr = addr++;
-        *pixelDatPtr = (block & 0xFF) >> 4;
-
-        *imgAddyPtr = addr++;
-        *pixelDatPtr = ((block >> 8) & 0xFF) >> 4;
-
-        *imgAddyPtr = addr++;
-        *pixelDatPtr = ((block >> 16) & 0xFF) >> 4;
-
-        *imgAddyPtr = addr++;
-        *pixelDatPtr = ((block >> 24) & 0xFF) >> 4;
-    }
-}
-
-// Writes one quarter-size image to a specific quadrant of the pixel buffer.
-// @param buffer       Pointer to a buffer holding 4 packed quarter images
-// @param imageIndex   Which of the 4 sub-images to use as the source (0–3)
-// @param displayIndex Which screen quadrant to target (0=TL, 1=TR, 2=BL, 3=BR)
-void display_quad_image(uint8_t *buffer, uint32_t imageIndex, uint32_t displayIndex) {
-    volatile int* const pixelDatPtr = (volatile int*)(PIXEL_DAT_BASE | UNCACHED_MEM_MASK);
-    volatile int* const imgAddyPtr  = (volatile int*)(IMG_ADDY_BASE  | UNCACHED_MEM_MASK);
-
-    uint8_t* src = (uint8_t*)((uint32_t)buffer | UNCACHED_MEM_MASK);
-
-    uint32_t imgAddr = imageIndex * QUAD_IMAGE_SIZE;
-    uint32_t pixelBufferAddr = 0;
-
-    if (displayIndex & 0x1) { pixelBufferAddr += QUAD_IMAGE_WIDTH; }
-    if (displayIndex & 0x2) { pixelBufferAddr += QUAD_IMAGE_SIZE * 2; }
-
-    for (uint32_t i = 0; i < QUAD_IMAGE_HEIGHT; i++) {
-        for (uint32_t j = 0; j < QUAD_IMAGE_WIDTH; j++) {
-            *imgAddyPtr  = pixelBufferAddr;
-            *pixelDatPtr = src[imgAddr] >> 4;
-            imgAddr++;
-            pixelBufferAddr++;
-        }
-        pixelBufferAddr += IMAGE_WIDTH - QUAD_IMAGE_WIDTH;
-    }
-}
-
-// Main loop: waits for a frame token from the communications core, applies the
-// selected processing mode, and writes the result to the VGA pixel buffer.
-// @return 0 (loop runs indefinitely)
 int main() {
-    int currentlyDisplaying = -1;
-    uint32_t lastFrameTime = 0;
+	printf("Img proc main.\n");
+
+    int currently_displaying = -1;
 
     alt_ic_isr_register(
         DATA_MAILBOX_IRQ_INTERRUPT_CONTROLLER_ID,
@@ -256,76 +176,133 @@ int main() {
 
     IOWR(DATA_MAILBOX_BASE, 3, MAILBOX_IRQ_ENABLE);
 
-    while (1) {
-        // Update the shared quad-mode flag from the switches on each iteration
-        sharedDisplay->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
+    sharedTimingData->noFilterTime = 0;
+    sharedTimingData->flipTime = 0;
+    sharedTimingData->blurTime = 0;
+    sharedTimingData->sobelTime = 0;
 
-        if (newFrameReady) {
-            newFrameReady = 0;
+	printf("Img proc init.\n");
 
-            uint32_t currentTime = IORD(USEC_COUNTER_BASE, 0);
-            if (lastFrameTime != 0) {
-                uint32_t frameTime = currentTime - lastFrameTime;
-                display_fps(frameTime);
-            }
-            lastFrameTime = currentTime;
+    while(1) {
+    	// Busy wait until a new frame is ready
+    	while (!newFrameReady);
+    	// Immediately update frame ready flag
+    	newFrameReady = 0;
 
-            if (currentlyDisplaying != -1) {
-                while (IORD(ACK_MAILBOX_BASE, 2) & MAILBOX_STATUS_FULL);
-                IOWR(ACK_MAILBOX_BASE, 0, currentlyDisplaying);
-            }
+		if (currently_displaying != -1) {
+			while (IORD(ACK_MAILBOX_BASE, 2) & 0x02);
+			IOWR(ACK_MAILBOX_BASE, 0, currently_displaying);
+		}
 
-            currentlyDisplaying = currentFrameIndex;
+		currently_displaying = currentFrameIndex;
 
-            uint8_t* source = (uint8_t*)((uint32_t)buffers[currentlyDisplaying] | UNCACHED_MEM_MASK);
+		// Get source buffer (uncached)
+		uint8_t* source = (uint8_t*)(buffers[currently_displaying]);
+		uint8_t *processing_buffer = processing_buffers[bufToSend];
 
-            uint8_t isQuad = sharedDisplay->isQuad;
-            int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3; // SW[2:1]
+//    	printf("Img proc received frame, address: %d\n", (int)source);
 
-            if (isQuad) {
-                // Quad mode: one quarter image received, process into 4 output slots
-                memcpy(processingBuffer, source, QUAD_IMAGE_SIZE);
+		uint8_t isQuad = shared_display->isQuad;
+		int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;  // SW[2:1]
 
-                process_flip(source,
-                             processingBuffer + QUAD_IMAGE_SIZE,
-                             QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
+		if (isQuad)
+		{
+			// Quad mode: one quarter image received, process 4 ways
 
-                box_blur(source,
-                         processingBuffer + 2 * QUAD_IMAGE_SIZE,
-                         QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+			// Slot 0: raw
+			uint32_t noFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
+			for (size_t i = 0; i < QUAD_IMAGE_SIZE; i++)
+			{
+				processing_buffer[i] = source[i];
+			}
+			uint32_t noFilterEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->noFilterTime = noFilterEndTime - noFilterBeginTime;
 
-                sobel_edge_detection(source,
-                                     processingBuffer + 3 * QUAD_IMAGE_SIZE,
-                                     QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+			// Slot 1: flip
+			uint32_t flipBeginTime = IORD(USEC_COUNTER_BASE, 0);
+			process_flip(source,
+						 processing_buffer + QUAD_IMAGE_SIZE,
+						 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT, 1);
+			uint32_t flipEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->flipTime = flipEndTime - flipBeginTime;
 
-                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[0], 0);
-                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[1], 1);
-                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[2], 2);
-                display_quad_image(processingBuffer, sharedDisplay->quadDisplayIndices[3], 3);
-            } else {
-                // Full mode: SW[2:1] selects the processing operation
-                switch (processMode) {
-                    case PROC_FLIP:
-                        process_flip(source, processingBuffer,
-                                     IMAGE_WIDTH, IMAGE_HEIGHT, 1);
-                        display_full_image(processingBuffer);
-                        break;
-                    case PROC_BLUR:
-                        box_blur(source, processingBuffer,
-                                 IMAGE_WIDTH, IMAGE_HEIGHT);
-                        display_full_image(processingBuffer);
-                        break;
-                    case PROC_EDGE:
-                        sobel_edge_detection(source, processingBuffer,
-                                             IMAGE_WIDTH, IMAGE_HEIGHT);
-                        display_full_image(processingBuffer);
-                        break;
-                    default: // PROC_RAW
-                        display_full_image(source);
-                        break;
-                }
-            }
-        }
+			// Slot 2: blur
+			uint32_t blurBeginTime = IORD(USEC_COUNTER_BASE, 0);
+			box_blur(source,
+					 processing_buffer + 2 * QUAD_IMAGE_SIZE,
+					 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+			uint32_t blurEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->blurTime = blurEndTime - blurBeginTime;
+
+			// Slot 3: edge
+			uint32_t sobelBeginTime = IORD(USEC_COUNTER_BASE, 0);
+			sobel_edge_detection(source,
+								 processing_buffer + 3 * QUAD_IMAGE_SIZE,
+								 QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+			uint32_t sobelEndTime = IORD(USEC_COUNTER_BASE, 0);
+			sharedTimingData->sobelTime = sobelEndTime - sobelBeginTime;
+		}
+		else
+		{
+			// Full mode: SW[2:1] selects processing
+			uint32_t fullFilterBeginTime = IORD(USEC_COUNTER_BASE, 0);
+			switch (processMode) {
+				case PROC_FLIP:
+					process_flip(source, processing_buffer,
+								 IMAGE_WIDTH, IMAGE_HEIGHT, 1);
+					break;
+				case PROC_BLUR:
+					box_blur(source, processing_buffer,
+							 IMAGE_WIDTH, IMAGE_HEIGHT);
+					break;
+				case PROC_EDGE:
+					sobel_edge_detection(source, processing_buffer,
+										 IMAGE_WIDTH, IMAGE_HEIGHT);
+					break;
+				default: // PROC_RAW
+//					printf("No filter, copy %d to %d\n", (int)source, (int)processing_buffer);
+					for (size_t i = 0; i < IMAGE_SIZE; i++)
+					{
+						processing_buffer[i] = source[i];
+					}
+					break;
+			}
+			uint32_t fullFilterEndTime = IORD(USEC_COUNTER_BASE, 0);
+
+			sharedTimingData->noFilterTime = 0;
+			sharedTimingData->flipTime = 0;
+			sharedTimingData->blurTime = 0;
+			sharedTimingData->sobelTime = 0;
+
+			uint32_t fullFilterTime = fullFilterEndTime - fullFilterBeginTime;
+			switch (processMode)
+			{
+			case PROC_RAW:
+				sharedTimingData->noFilterTime = fullFilterTime;
+				break;
+			case PROC_FLIP:
+				sharedTimingData->flipTime = fullFilterTime;
+				break;
+			case PROC_BLUR:
+				sharedTimingData->blurTime = fullFilterTime;
+				break;
+			case PROC_EDGE:
+				sharedTimingData->sobelTime = fullFilterTime;
+				break;
+			}
+		}
+
+//		printf("Img proc passing frame to display, proc buffer: %d\n", (int)processing_buffer);
+//		printf("Pixel value at 1 0 source: %d\n", (int)(*(source + 1)));
+//		printf("Pixel value at 1 0 IORD: %d\n", (int)((IORD(source, 0) >> 8) & 0xff));
+//		printf("Pixel value at 1 0 dest: %d\n", (int)(*(processing_buffer + 1)));
+
+		// Signal to display proc that the next frame is ready
+		while (IORD(DISPLAY_FRAME_MAILBOX_BASE, 2) & 0x2);
+		IOWR(DISPLAY_FRAME_MAILBOX_BASE, 0, bufToSend);
+
+		bufToSend ^= 0x1;
     }
+
     return 0;
 }

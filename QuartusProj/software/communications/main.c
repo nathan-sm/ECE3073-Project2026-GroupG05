@@ -40,15 +40,18 @@ uint8_t* buffers[3] = {
     (uint8_t*)(IMAGE_READ_BUF_C)
 };
 
-// Shared structs mapped to uncached SDRAM aliases so both cores see writes immediately
-SharedAccelData* sharedAccel = (SharedAccelData*)(SHARED_ACCEL_DATA | UNCACHED_MEM_MASK);
-SharedDisplayState* sharedDisplay = (SharedDisplayState*)(SHARED_DISPLAY_STATE | UNCACHED_MEM_MASK);
+// Map the structs to SDRAM right after the 3 image buffers
+SharedAccelData* shared_accel = (SharedAccelData*)(SHARED_ACCEL_DATA);
+SharedDisplayState* shared_display = (SharedDisplayState*)(SHARED_DISPLAY_STATE);
+SharedTimingData *sharedTimingData = (SharedTimingData*)(SHARED_TIMING_DATA);
 
 // 1 = buffer is free for writing, 0 = buffer is locked by the image processing core
 volatile int freeBuffers[3] = {1, 1, 1};
 
-// Tracks the last camera configuration byte sent so we only re-send on change
-uint8_t gCamLastConfig = 0;
+// Camera config tracking
+#define CAM_QUAD_MASK  0x02
+#define CAM_WRITE_MASK 0x10
+uint8_t g_camLastConfig = 0x0;
 
 // ISR: called when the image processing core returns a buffer token via ACK mailbox
 static void mailbox_ack_isr(void* context) {
@@ -87,6 +90,8 @@ void doubletap_handler() {
 // the slot index to the image processing core via mailbox.
 // @return 0 (loop runs indefinitely)
 int main() {
+	printf("Comms main\n");
+
     accel_setup();
     gyro_set_dtap_callback(&doubletap_handler);
 
@@ -107,12 +112,21 @@ int main() {
     sharedDisplay->quadDisplayIndices[2] = 2;
     sharedDisplay->quadDisplayIndices[3] = 3;
 
-    // Send initial camera command to put it into a known state
-    uint8_t startupCmd = CAM_WRITE_MASK;
-    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startupCmd, 0, NULL, 0);
+    while (!IORD(CAM_REDY_BASE, 0));
 
-    while (1) {
-        // Find a free, unused buffer slot
+    // Initial camera setup command
+    uint8_t startup_cmd = CAM_WRITE_MASK;
+    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, IMAGE_SIZE, buffers[0], 0);
+
+    sharedTimingData->frameReadTime = 0;
+
+    printf("Comms init\n");
+
+    while(1) {
+        // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
+        while (IORD(CAM_REDY_BASE, 0) == 0);
+
+        // 1. Find a safe, unused buffer
         int writeTarget = -1;
         for (int i = 0; i < 3; i++) {
             if (freeBuffers[i]) {
@@ -125,15 +139,15 @@ int main() {
             continue;
         }
 
-        // Spin until the ESP-CAM signals it is ready (GPIO[2] high)
-        while (IORD(CAM_REDY_BASE, 0) == 0);
+        // Update shared quad mode flag from switches each iteration
+        // Core 0 reads this to know what frame size to request
+        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
 
-        freeBuffers[writeTarget] = 0; // lock buffer while receiving frame
+        free_buffers[write_target] = 0; // Lock buffer
 
-        // Check quad mode (set by the image processing core reading SW[0])
-        bool isQuad = sharedDisplay->isQuad;
+        bool isQuad = shared_display->isQuad;
 
-        // Build camera command — only set WRITE_MASK when the config has changed
+        // 3. Build camera command only set WRITE_MASK when config changes
         uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
         if (cmd != gCamLastConfig) {
             gCamLastConfig = cmd;
@@ -141,8 +155,9 @@ int main() {
         }
 
         uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
-        uint8_t* destPtr = (uint8_t*)((uint32_t)buffers[writeTarget] | UNCACHED_MEM_MASK);
+        uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
 
+        uint32_t frameReadBeginTime = IORD(USEC_COUNTER_BASE, 0);
         alt_avalon_spi_command(
             SPI_0_BASE,
             0,
@@ -152,6 +167,8 @@ int main() {
             destPtr,
             0
         );
+        uint32_t frameReadEndTime = IORD(USEC_COUNTER_BASE, 0);
+        sharedTimingData->frameReadTime = frameReadEndTime - frameReadBeginTime;
 
         // Fetch and share fresh accelerometer data with the image processing core
         accel_update();
@@ -161,8 +178,11 @@ int main() {
         sharedAccel->y = currentRot.yAxis;
         sharedAccel->z = currentRot.zAxis;
 
-        // Send the completed buffer index to the image processing core
-        while (IORD(DATA_MAILBOX_BASE, 2) & MAILBOX_STATUS_FULL);
+//        printf("Sent frame to image proc at addr %d\n", (int)dest_ptr);
+//		printf("Pixel value at 1 0: %d\n", dest_ptr[1]);
+
+        // 5. Send the finished buffer token to the Image CPU
+        while (IORD(DATA_MAILBOX_BASE, 2) & 0x02);
         IOWR(DATA_MAILBOX_BASE, 0, writeTarget);
     }
     return 0;
