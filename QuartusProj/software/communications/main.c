@@ -115,7 +115,7 @@ int main() {
 
     // Initial camera setup command
     uint8_t startup_cmd = CAM_WRITE_MASK;
-    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, 0, NULL, 0);
+    alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, IMAGE_SIZE, buffers[0], 0);
 
     printf("Comms init\n");
 
