@@ -1,3 +1,11 @@
+// Communications Nios II core — receives camera frames via SPI, shares accelerometer
+// data, and forwards frame buffer tokens to the image processing core via mailbox.
+// Created By: Nathan Morris       (32532601)
+//             Ritwam Shohaum      (33156816)
+//             Shuk Kan LUI        (33891885)
+//             Evgeny Solomin      (34977260)
+// Created Date: 2026
+// version = '1.0'
 #include <stdlib.h>
 #include <stdio.h>
 
