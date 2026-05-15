@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>May 15, 2026 12:34:25 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778812465806</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>May 15, 2026 1:01:38 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778814098615</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>/home/evgeny/Documents/Monash/2026_S1/ECE3073/ECE3073-Project2026-GroupG05/QuartusProj/software/communications_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>../../NiosSystem.sopcinfo</SopcDesignFile>

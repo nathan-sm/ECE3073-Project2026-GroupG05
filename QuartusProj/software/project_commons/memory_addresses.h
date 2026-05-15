@@ -13,6 +13,7 @@
 #define SHARED_ACCEL_DATA (IMAGE_READ_BUF_C + IMAGE_SIZE)
 #define SHARED_DISPLAY_STATE (SHARED_ACCEL_DATA + sizeof(SharedAccelData))
 
-#define PROCESSED_IMG_BUF (SHARED_DISPLAY_STATE + sizeof(SharedDisplayState))
+#define PROCESSED_IMG_BUF_A (SHARED_DISPLAY_STATE + sizeof(SharedDisplayState))
+#define PROCESSED_IMG_BUF_B (PROCESSED_IMG_BUF_A + IMAGE_SIZE)
 
 #endif

@@ -28,7 +28,7 @@ volatile int free_buffers[3] = {1, 1, 1}; // 1 = free, 0 = in use
 // Camera config tracking
 #define CAM_QUAD_MASK  0x02
 #define CAM_WRITE_MASK 0x10
-uint8_t g_camLastConfig = 0;
+uint8_t g_camLastConfig = 0x0;
 
 // Gyro thresholds for quad display control
 #define GYRO_THRESH_SINGLE 60
@@ -89,6 +89,8 @@ int main() {
     shared_display->quadDisplayIndices[2] = 2;
     shared_display->quadDisplayIndices[3] = 3;
 
+    while (!IORD(CAM_REDY_BASE, 0));
+
     // Initial camera setup command
     uint8_t startup_cmd = CAM_WRITE_MASK;
     alt_avalon_spi_command(SPI_0_BASE, 0, 1, &startup_cmd, 0, NULL, 0);
@@ -98,10 +100,6 @@ int main() {
     while(1) {
         // Spin here and wait for the ESP-CAM to pull GPIO[2] high.
         while (IORD(CAM_REDY_BASE, 0) == 0);
-
-        // Update shared quad mode flag from switches each iteration
-        // Core 0 reads this to know what frame size to request
-        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
 
         // 1. Find a safe, unused buffer
         int write_target = -1;
@@ -116,12 +114,15 @@ int main() {
             continue;
         }
 
+        // Update shared quad mode flag from switches each iteration
+        // Core 0 reads this to know what frame size to request
+        shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
+
         free_buffers[write_target] = 0; // Lock buffer
 
-        // 2. Check quad mode (set by Core 1 from SW[0])
         bool isQuad = shared_display->isQuad;
 
-        // 3. Build camera command � only set WRITE_MASK when config changes
+        // 3. Build camera command only set WRITE_MASK when config changes
         uint8_t cmd = isQuad ? CAM_QUAD_MASK : 0x00;
         if (cmd != g_camLastConfig) {
             g_camLastConfig = cmd;
@@ -130,7 +131,6 @@ int main() {
 
         uint32_t readSize = isQuad ? QUAD_IMAGE_SIZE : IMAGE_SIZE;
         uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
-//        uint8_t* dest_ptr = (uint8_t*)(buffers[0]);
 
         alt_avalon_spi_command(
             SPI_0_BASE,
