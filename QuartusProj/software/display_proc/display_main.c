@@ -104,6 +104,9 @@ static void display_frame_rx_isr(void *context)
 	bufToDraw = IORD(DISPLAY_FRAME_MAILBOX_BASE, 0);
 }
 
+// benchmarking: print averages every N frames
+#define BENCH_INTERVAL 20
+
 int main()
 {
 	printf("Display proc main.\n");
@@ -120,31 +123,36 @@ int main()
 
 	lastFrameTime = IORD(USEC_COUNTER_BASE, 0);
 
-	printf("Display proc init.\n");
+	// benchmarking accumulators
+	uint32_t bench_count = 0;
+	uint32_t sum_frame   = 0;
+	uint32_t sum_display = 0;
+
+	printf("Display proc init. Benchmarking every %d frames.\n\n", BENCH_INTERVAL);
 
 	while (1)
 	{
 		while (!nextFrameReady);
 		nextFrameReady = 0;
 
-//    	printf("Display proc received frame, displaying from %d\n", (int)(processingBuffer));
-//		printf("Pixel value at 1 0: %d\n", (int)(processingBuffer[1]));
-
-		// Calculate the time it took since the last frame was delivered
+		// frame-to-frame timing
 		uint32_t currentTime = IORD(USEC_COUNTER_BASE, 0);
+		uint32_t frameTime = 0;
 		if (lastFrameTime != 0) {
-			uint32_t frameTime = currentTime - lastFrameTime;
+			frameTime = currentTime - lastFrameTime;
 			display_fps(frameTime);
+			sum_frame += frameTime;
 		}
 		lastFrameTime = currentTime;
 
 		int isQuad = displayState->isQuad;
-
 		uint8_t *bufferDrawPtr = sourceBuffers[bufToDraw];
+
+		// time the display
+		uint32_t t_disp = IORD(USEC_COUNTER_BASE, 0);
 
 		if (isQuad)
 		{
-			// Display each quadrant using indices controlled by Core 0 double-tap
 			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[0], 0);
 			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[1], 1);
 			display_quad_image(bufferDrawPtr, displayState->quadDisplayIndices[2], 2);
@@ -153,6 +161,34 @@ int main()
 		else
 		{
 			display_full_image(bufferDrawPtr);
+		}
+
+		uint32_t disp_time = IORD(USEC_COUNTER_BASE, 0) - t_disp;
+		sum_display += disp_time;
+		bench_count++;
+
+		if (bench_count >= BENCH_INTERVAL) {
+			uint32_t avg_frame = sum_frame / bench_count;
+			uint32_t avg_disp  = sum_display / bench_count;
+			// processing time estimate: frame interval minus display time
+			uint32_t avg_proc  = (avg_frame > avg_disp) ? avg_frame - avg_disp : 0;
+
+			uint32_t fps_whole = avg_frame > 0 ? 1000000 / avg_frame : 0;
+			uint32_t fps_frac  = avg_frame > 0 ? (100000000 / avg_frame) % 100 : 0;
+
+			printf("===================================================\n");
+			printf("  %s mode (avg over %lu frames)\n",
+				   isQuad ? "QUAD" : "SINGLE", bench_count);
+			printf("===================================================\n");
+			printf("  Display:        %lu us\n", avg_disp);
+			printf("  Processing:     ~%lu us (frame - display)\n", avg_proc);
+			printf("  -------------------------------------------\n");
+			printf("  Frame interval: %lu us\n", avg_frame);
+			printf("  FPS:            %lu.%02lu\n\n", fps_whole, fps_frac);
+
+			bench_count = 0;
+			sum_frame   = 0;
+			sum_display = 0;
 		}
 	}
 }
