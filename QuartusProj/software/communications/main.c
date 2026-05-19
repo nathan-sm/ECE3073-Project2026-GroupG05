@@ -106,9 +106,9 @@ int main() {
         while (IORD(CAM_REDY_BASE, 0) == 0);
 
         free_buffers[write_target] = 0;
-        bool isQuad = shared_display->isQuad;
 
-        uint8_t desired_config = CAM_RGB_MASK | CAM_PACK_MASK | (isQuad ? CAM_QUAD_MASK : 0x00);
+        // ALWAYS keep the camera configuration locked to full frame size
+        uint8_t desired_config = CAM_RGB_MASK | CAM_PACK_MASK;
 
         if (desired_config != g_camLastConfig) {
             uint8_t write_cmd = desired_config | CAM_WRITE_MASK;
@@ -119,7 +119,8 @@ int main() {
             continue; // Spin and wait for a clean frame next time
         }
 
-        uint32_t readSize = isQuad ? QUAD_BYTES : IMAGE_BYTES;
+        // ALWAYS read full image data from the camera stability
+        uint32_t readSize = IMAGE_BYTES;
         uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target] | 0x80000000);
 
         alt_avalon_spi_command(SPI_0_BASE, 0, 1, &desired_config, readSize, dest_ptr, 0);

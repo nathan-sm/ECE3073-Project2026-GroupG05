@@ -259,12 +259,14 @@ int main() {
 
             currently_displaying = current_frame_index;
 
-            // 1. Get raw packed bytes
+            // 1. Always grab the full frame buffer
             uint8_t* source_packed = (uint8_t*)((uint32_t)buffers[currently_displaying] | 0x80000000);
 
             uint8_t isQuad = shared_display->isQuad;
             int processMode = (IORD(SW_BASE, 0) >> 1) & 0x3;
-            int num_pixels = isQuad ? QUAD_PIXELS : IMAGE_PIXELS;
+
+            // ALWAYS execute unpacking across the full 320x240 data payload
+            int num_pixels = IMAGE_PIXELS;
 
             int byte_idx = 0;
             for (int i = 0; i < num_pixels; i += 2) {
@@ -278,20 +280,24 @@ int main() {
                 unpacked_rgb[i]   = (((p0_raw >> 4) & 0xF) << 8) | ((p0_raw & 0xF) << 4) | ((p0_raw >> 8) & 0xF);
                 unpacked_rgb[i+1] = (((p1_raw >> 4) & 0xF) << 8) | ((p1_raw & 0xF) << 4) | ((p1_raw >> 8) & 0xF);
             }
-            // -----------------------------------
 
             if (isQuad) {
-                // Slot 0: Raw
-                memcpy(processing_buffer, unpacked_rgb, QUAD_PIXELS * 2);
+                // SOFTWARE DOWNSAMPLING: Manually scale the full 320x240 image down into a 160x120 array
+                uint16_t* quad_source = processing_buffer; // Draw straight into the first quadrant slot
+                for (int y = 0; y < QUAD_IMAGE_HEIGHT; y++) {
+                    for (int x = 0; x < QUAD_IMAGE_WIDTH; x++) {
+                        quad_source[y * QUAD_IMAGE_WIDTH + x] = unpacked_rgb[(y * 2) * FULL_IMAGE_WIDTH + (x * 2)];
+                    }
+                }
 
-                // Slot 1: Flip
-                process_flip(unpacked_rgb, processing_buffer + QUAD_PIXELS, QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+                // Slot 1: Flip (processed from the clean quad_source variable)
+                process_flip(quad_source, processing_buffer + QUAD_PIXELS, QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
                 // Slot 2: Blur
-                process_rgb_blur(unpacked_rgb, processing_buffer + (2 * QUAD_PIXELS), QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+                process_rgb_blur(quad_source, processing_buffer + (2 * QUAD_PIXELS), QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
                 // Slot 3: Edge
-                process_rgb_edges(unpacked_rgb, processing_buffer + (3 * QUAD_PIXELS), QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
+                process_rgb_edges(quad_source, processing_buffer + (3 * QUAD_PIXELS), QUAD_IMAGE_WIDTH, QUAD_IMAGE_HEIGHT);
 
                 display_quad_image(processing_buffer, shared_display->quadDisplayIndices[0], 0);
                 display_quad_image(processing_buffer, shared_display->quadDisplayIndices[1], 1);
