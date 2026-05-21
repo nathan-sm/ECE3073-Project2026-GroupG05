@@ -110,8 +110,8 @@ refer to the applicable agreement for further details.
 	(port
 		(pt 0 392)
 		(output)
-		(text "pixel_dat_export[3..0]" (rect 0 0 84 12)(font "Arial" (font_size 8)))
-		(text "pixel_dat_export[3..0]" (rect 4 381 136 392)(font "Arial" (font_size 8)))
+		(text "pixel_dat_export[11..0]" (rect 0 0 87 12)(font "Arial" (font_size 8)))
+		(text "pixel_dat_export[11..0]" (rect 4 381 142 392)(font "Arial" (font_size 8)))
 		(line (pt 0 392)(pt 144 392)(line_width 3))
 	)
 	(port

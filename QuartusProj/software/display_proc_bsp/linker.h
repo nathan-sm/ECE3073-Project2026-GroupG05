@@ -1,10 +1,10 @@
 /*
- * alt_sys_init.c - HAL initialization source
+ * linker.h - Linker script mapping information
  *
- * Machine generated for CPU 'image_proc' in SOPC Builder design 'NiosSystem'
+ * Machine generated for CPU 'display_proc' in SOPC Builder design 'NiosSystem'
  * SOPC Builder design path: ../../NiosSystem.sopcinfo
  *
- * Generated: Fri May 15 23:14:24 EST 2026
+ * Generated: Fri May 15 23:14:29 EST 2026
  */
 
 /*
@@ -48,53 +48,56 @@
  * of California and by the laws of the United States of America.
  */
 
-#include "system.h"
-#include "sys/alt_irq.h"
-#include "sys/alt_sys_init.h"
+#ifndef __LINKER_H_
+#define __LINKER_H_
 
-#include <stddef.h>
 
 /*
- * Device headers
+ * BSP controls alt_load() behavior in crt0.
+ *
  */
 
-#include "altera_nios2_gen2_irq.h"
-#include "altera_avalon_jtag_uart.h"
-#include "altera_avalon_mailbox_simple.h"
+#define ALT_LOAD_EXPLICITLY_CONTROLLED
+
 
 /*
- * Allocate the device storage
+ * Base address and span (size in bytes) of each linker region
+ *
  */
 
-ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( IMAGE_PROC, image_proc);
-ALTERA_AVALON_JTAG_UART_INSTANCE ( IMAGE_JTAG, image_jtag);
-ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( ACK_MAILBOX, ack_mailbox);
-ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DATA_MAILBOX, data_mailbox);
-ALTERA_AVALON_MAILBOX_SIMPLE_INSTANCE ( DISPLAY_FRAME_MAILBOX, display_frame_mailbox);
+#define RESET_REGION_BASE 0x40000
+#define RESET_REGION_SPAN 32
+#define SDRAM_CONTROL_BEFORE_RESET_REGION_BASE 0x0
+#define SDRAM_CONTROL_BEFORE_RESET_REGION_SPAN 131072
+#define SDRAM_CONTROL_REGION_BASE 0x40020
+#define SDRAM_CONTROL_REGION_SPAN 131040
+
 
 /*
- * Initialize the interrupt controller devices
- * and then enable interrupts in the CPU.
- * Called before alt_sys_init().
- * The "base" parameter is ignored and only
- * present for backwards-compatibility.
+ * Devices associated with code sections
+ *
  */
 
-void alt_irq_init ( const void* base )
-{
-    ALTERA_NIOS2_GEN2_IRQ_INIT ( IMAGE_PROC, image_proc);
-    alt_irq_cpu_enable_interrupts();
-}
+#define ALT_EXCEPTIONS_DEVICE SDRAM_CONTROL
+#define ALT_RESET_DEVICE SDRAM_CONTROL
+#define ALT_RODATA_DEVICE SDRAM_CONTROL
+#define ALT_RWDATA_DEVICE SDRAM_CONTROL
+#define ALT_TEXT_DEVICE SDRAM_CONTROL
+
 
 /*
- * Initialize the non-interrupt controller devices.
- * Called after alt_irq_init().
+ * Initialization code at the reset address is allowed (e.g. no external bootloader).
+ *
  */
 
-void alt_sys_init( void )
-{
-    ALTERA_AVALON_JTAG_UART_INIT ( IMAGE_JTAG, image_jtag);
-    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( ACK_MAILBOX, ack_mailbox);
-    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DATA_MAILBOX, data_mailbox);
-    ALTERA_AVALON_MAILBOX_SIMPLE_INIT ( DISPLAY_FRAME_MAILBOX, display_frame_mailbox);
-}
+#define ALT_ALLOW_CODE_AT_RESET
+
+
+/*
+ * The alt_load() facility is called from crt0 to copy sections into RAM.
+ *
+ */
+
+#define ALT_LOAD_COPY_RWDATA
+
+#endif /* __LINKER_H_ */

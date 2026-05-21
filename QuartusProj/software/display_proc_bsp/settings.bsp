@@ -2,13 +2,13 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>15/05/2026 11:14:31 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1778850871599</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>C:\Users\ritwa\Documents\GitHub\ECE3073-Project2026-GroupG05\QuartusProj\software\communications_bsp</BspGeneratedLocation>
+        <BspGeneratedTimeStamp>15/05/2026 11:14:29 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1778850869016</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>C:\Users\ritwa\Documents\GitHub\ECE3073-Project2026-GroupG05\QuartusProj\software\display_proc_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>..\..\NiosSystem.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
-        <Cpu>comms_proc</Cpu>
+        <Cpu>display_proc</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
         <Setting>
                 <SettingName>hal.sys_clk_timer</SettingName>
@@ -194,7 +194,7 @@
                 <SettingName>hal.stdin</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>comms_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDIN character-mode device. This setting is used by the ALT_STDIN family of defines in system.h.</Description>
@@ -206,7 +206,7 @@
                 <SettingName>hal.stdout</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>comms_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDOUT character-mode device. This setting is used by the ALT_STDOUT family of defines in system.h.</Description>
@@ -218,7 +218,7 @@
                 <SettingName>hal.stderr</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>comms_jtag</Value>
+                <Value>display_jtag</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of STDERR character-mode device. This setting is used by the ALT_STDERR family of defines in system.h.</Description>
@@ -898,6 +898,30 @@
                 <Enabled>false</Enabled>
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
+        <LinkerRegion>
+                <regionName>sdram_control_BEFORE_RESET</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>0</offset>
+                <size>131072</size>
+                <baseAddress>0x0</baseAddress>
+                <addressRange>0x00000000 - 0x0001FFFF</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>reset</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>262144</offset>
+                <size>32</size>
+                <baseAddress>0x40000</baseAddress>
+                <addressRange>0x00040000 - 0x0004001F</addressRange>
+        </LinkerRegion>
+        <LinkerRegion>
+                <regionName>sdram_control</regionName>
+                <memoryName>sdram_control</memoryName>
+                <offset>262176</offset>
+                <size>131040</size>
+                <baseAddress>0x40020</baseAddress>
+                <addressRange>0x00040020 - 0x0005FFFF</addressRange>
+        </LinkerRegion>
         <MemoryMap>
                 <slaveDescriptor>sdram_control</slaveDescriptor>
                 <addressRange>0x00000000 - 0x03FFFFFF</addressRange>
@@ -905,9 +929,15 @@
                 <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>spi_0</slaveDescriptor>
-                <addressRange>0x04001000 - 0x0400101F</addressRange>
-                <addressSpan>32</addressSpan>
+                <slaveDescriptor>hex20</slaveDescriptor>
+                <addressRange>0x04001000 - 0x0400100F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>hex53</slaveDescriptor>
+                <addressRange>0x04001010 - 0x0400101F</addressRange>
+                <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
@@ -923,38 +953,26 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>cam_redy</slaveDescriptor>
+                <slaveDescriptor>pixel_dat</slaveDescriptor>
                 <addressRange>0x04001040 - 0x0400104F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>gsens_int</slaveDescriptor>
+                <slaveDescriptor>img_addy</slaveDescriptor>
                 <addressRange>0x04001050 - 0x0400105F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>altpll_0</slaveDescriptor>
+                <slaveDescriptor>display_frame_mailbox</slaveDescriptor>
                 <addressRange>0x04001060 - 0x0400106F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>data_mailbox</slaveDescriptor>
-                <addressRange>0x04001070 - 0x0400107F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>ack_mailbox</slaveDescriptor>
-                <addressRange>0x04001080 - 0x0400108F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>comms_jtag</slaveDescriptor>
-                <addressRange>0x04001090 - 0x04001097</addressRange>
+                <slaveDescriptor>display_jtag</slaveDescriptor>
+                <addressRange>0x04001070 - 0x04001077</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>

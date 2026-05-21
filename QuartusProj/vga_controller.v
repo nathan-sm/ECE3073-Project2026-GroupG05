@@ -12,22 +12,23 @@
 
 
 module vga_controller (
-    // 25MHz clock derived from CLOCK_50
-    input VGA_CLK,
-
-    // Controller interface with the pixel buffer
-    input [3:0] VGA_DATA,
-    output [18:0] VGA_ADDR, // This address may vary, having it longer that what you use wont be an issue
-
-    // Pixel data output
-    output [3:0] VGA_R,
-    output [3:0] VGA_G,
-    output [3:0] VGA_B,
-
-    // VGA timing output
-    output VGA_HS,
-    output VGA_VS
-
+	// 25MHz clock derived from CLOCK_50
+	input VGA_CLK,
+	
+	// Controller interface with the pixel buffer
+	input [11:0] VGA_DATA,
+	output [18:0] VGA_ADDR, // This address may vary, having it longer that what you use wont be an issue
+	
+	// Pixel data output
+	output [3:0] VGA_R,
+	output [3:0] VGA_G,
+	output [3:0] VGA_B,
+	
+	
+	// VGA timing output
+	output VGA_HS,
+	output VGA_VS
+	
 );
     parameter H_SYNC  = 96;
     parameter H_BACK  = 48;
@@ -63,21 +64,19 @@ module vga_controller (
     assign VGA_HS = ~(hAddr < H_SYNC); // hsync high for 96 counts
     assign VGA_VS = ~(vAddr < V_SYNC); // vsync high for 2 counts
 
-    wire pixelValid;
-    assign pixelValid = (hAddr > (H_SYNC + H_BACK) && hAddr < (H_CYCLE - H_FRONT)) &&
-                        (vAddr > (V_SYNC + V_BACK) && vAddr < (V_CYCLE - V_FRONT));
-
-    assign VGA_R = pixelValid ? VGA_DATA[3:0] : 4'd0;
-    assign VGA_G = pixelValid ? VGA_DATA[3:0] : 4'd0;
-    assign VGA_B = pixelValid ? VGA_DATA[3:0] : 4'd0;
-
-    wire [18:0] hMemAddr, vMemAddr;
-
-    assign hMemAddr = hAddr - (H_SYNC + H_BACK) + 1;
-    assign vMemAddr = vAddr - (V_SYNC + V_BACK);
-
-    // Scale addresses from 640x480 to 320x240
-    assign VGA_ADDR = ((hMemAddr >> 1) + ((vMemAddr >> 1) * 320));
-
-
+	assign pixelValid = (H_ADDR > (H_SYNC + H_BACK) && H_ADDR < (H_CYCLE - H_FRONT)) && (V_ADDR > (V_SYNC + V_BACK) && V_ADDR < (V_CYCLE - V_FRONT));
+	
+	assign VGA_R = pixelValid ? VGA_DATA[11:8] : 4'd0;
+   assign VGA_G = pixelValid ? VGA_DATA[7:4]  : 4'd0;
+   assign VGA_B = pixelValid ? VGA_DATA[3:0]  : 4'd0;
+	
+	wire [18:0] H_MEM_ADDR, V_MEM_ADDR;	
+	
+	assign H_MEM_ADDR = H_ADDR - (H_SYNC + H_BACK) + 1;
+	assign V_MEM_ADDR = V_ADDR - (V_SYNC + V_BACK);
+	
+//	// Scale the addresses to 320X240 instead of 640x480. 
+	assign VGA_ADDR = ((H_MEM_ADDR >> 1) + ((V_MEM_ADDR >> 1) * 320));
+					
+	
 endmodule

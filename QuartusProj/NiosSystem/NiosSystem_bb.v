@@ -35,7 +35,7 @@ module NiosSystem (
 	output	[16:0]	img_addy_export;
 	input	[1:0]	key_export;
 	output	[9:0]	ledr_export;
-	output	[3:0]	pixel_dat_export;
+	output	[11:0]	pixel_dat_export;
 	input		reset_reset_n;
 	output		sdram_clk_clk;
 	output	[12:0]	sdram_control_addr;
