@@ -13,6 +13,8 @@
 #include "io.h"
 #include "sys/alt_irq.h"
 #include <stdlib.h>
+#include <stdio.h>
+
 
 #include "common_defs.h"
 #include "memory_addresses.h"
@@ -152,36 +154,53 @@ void box_blur(uint8_t *input, uint8_t *output, int width, int height) {
 // @param output  Destination greyscale buffer
 // @param width   Image width in pixels
 // @param height  Image height in pixels
+
 void sobel_edge_detection(uint8_t *input, uint8_t *output, int width, int height) {
-    int kernelX[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-    int kernelY[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
-
+    // go through image by rows
+    // skip the outer pixel border to avoid reading memory outside the image
     for (int i = 1; i < height - 1; i++) {
+        // find the memory address for the 3 rows we are currently looking at
+        // faster than calculating every pixel
+        const uint8_t *row_above = input + (i - 1) * width;
+        const uint8_t *row_curr  = input + i       * width;
+        const uint8_t *row_below = input + (i + 1) * width;
+        uint8_t *out_row   = output + i * width;
+
+        // go through the current row fir each pixel
         for (int j = 1; j < width - 1; j++) {
-            int gx = 0;
-            int gy = 0;
+            // get neighbouring pixels, faster than 3x3 looping
+            int tl = row_above[j - 1];
+            int tc = row_above[j];
+            int tr = row_above[j + 1];
+            int ml = row_curr [j - 1];
+            int mr = row_curr [j + 1];
+            int bl = row_below[j - 1];
+            int bc = row_below[j];
+            int br = row_below[j + 1];
 
-            for (int ki = -1; ki <= 1; ki++) {
-                for (int kj = -1; kj <= 1; kj++) {
-                    int pixel = input[(i + ki) * width + (j + kj)];
-                    gx += pixel * kernelX[(ki + 1) * 3 + (kj + 1)];
-                    gy += pixel * kernelY[(ki + 1) * 3 + (kj + 1)];
-                }
-            }
+            // calc. horizontal and vertical (gx and gy) edge strength using bit shift
+            // faster than using multiplication
+            int gx = (tr - tl) + ((mr - ml) << 1) + (br - bl);
+            int gy = (bl - tl) + ((bc - tc) << 1) + (br - tr);
 
-            int magnitude = (gx < 0 ? -gx : gx) + (gy < 0 ? -gy : gy);
-            if (magnitude > 255) { magnitude = 255; }
-            output[i * width + j] = (magnitude >= SOBEL_EDGE_THRESHOLD) ? (uint8_t)magnitude : 0;
+            // turn negative numbers to postive
+            int abs_gx = gx < 0 ? -gx : gx;
+            int abs_gy = gy < 0 ? -gy : gy;
+
+            // get total edge strength and cap value at 255 preventing overflow
+            int magnitude = abs_gx + abs_gy;
+            if (magnitude > 255) magnitude = 255;
+
+            // if edge is strong draw it if not set to black (USING TEAMMATE's NEW MACRO)
+            out_row[j] = (magnitude >= SOBEL_EDGE_THRESHOLD) ? (uint8_t)magnitude : 0;
         }
     }
-
-    // Zero the border pixels that the loop skips
-    for (int x = 0; x < width; x++) { output[x] = 0; }
-    for (int x = 0; x < width; x++) { output[(height - 1) * width + x] = 0; }
-    for (int y = 0; y < height; y++) { output[y * width] = 0; }
-    for (int y = 0; y < height; y++) { output[y * width + (width - 1)] = 0; }
+    // zero border pixels
+    for (int x = 0; x < width; x++)  output[x] = 0;
+    for (int x = 0; x < width; x++)  output[(height - 1) * width + x] = 0;
+    for (int y = 0; y < height; y++) output[y * width] = 0;
+    for (int y = 0; y < height; y++) output[y * width + (width - 1)] = 0;
 }
-
 // ---- Display Functions ----
 
 // Writes a full 320x240 image to the pixel buffer using 32-bit reads for efficiency.
@@ -315,11 +334,19 @@ int main() {
                                  IMAGE_WIDTH, IMAGE_HEIGHT);
                         display_full_image(processingBuffer);
                         break;
-                    case PROC_EDGE:
+                    case PROC_EDGE: {
+                        // uint32_t start = IORD(USEC_COUNTER_BASE, 0);
+                        
                         sobel_edge_detection(source, processingBuffer,
                                              IMAGE_WIDTH, IMAGE_HEIGHT);
+
+                        // uint32_t end = IORD(USEC_COUNTER_BASE, 0);
+                        // printf("Sobel time: %lu us\n", (end - start));
+
                         display_full_image(processingBuffer);
                         break;
+                    }
+                    
                     default: // PROC_RAW
                         display_full_image(source);
                         break;
