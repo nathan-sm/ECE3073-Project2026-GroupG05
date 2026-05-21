@@ -1,4 +1,4 @@
-// Common project-wide type definitions and constants shared between both Nios II cores.
+// Common project-wide type definitions and constants shared between all three Nios II cores.
 // Created By: Nathan Morris       (32532601)
 //             Ritwam Shohaum      (33156816)
 //             Shuk Kan LUI        (33891885)

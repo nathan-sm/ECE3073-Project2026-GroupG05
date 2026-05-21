@@ -1,4 +1,4 @@
-// Shared SDRAM memory map for the dual-core Nios II system.
+// Shared SDRAM memory map for the three-core Nios II system.
 // Created By: Nathan Morris       (32532601)
 //             Ritwam Shohaum      (33156816)
 //             Shuk Kan LUI        (33891885)
@@ -25,9 +25,5 @@
 #define PROCESSED_IMG_BUF_B (PROCESSED_IMG_BUF_A + (IMAGE_SIZE * 2))
 
 #define SHARED_TIMING_DATA (PROCESSED_IMG_BUF_B + (IMAGE_SIZE * 2))
-
-// 8-byte alignment padding inserted after SharedAccelData before SharedDisplayState
-#define SHARED_ACCEL_PADDING 8
-#define SHARED_DISPLAY_STATE (SHARED_ACCEL_DATA + sizeof(SharedAccelData) + SHARED_ACCEL_PADDING)
 
 #endif

@@ -1,5 +1,5 @@
-// Communications Nios II core � receives camera frames via SPI, shares accelerometer
-// data, and forwards frame buffer tokens to the image processing core via mailbox.
+// Image Processing Nios II core -- applies selected processing mode to incoming
+// frames and forwards processed output to the display core via mailbox.
 // Created By: Nathan Morris       (32532601)
 //             Ritwam Shohaum      (33156816)
 //             Shuk Kan LUI        (33891885)
@@ -70,8 +70,8 @@ uint8_t  *b_blur           = (uint8_t*)(SCRATCHPAD_BASE + (IMAGE_SIZE * 9));
 
 // ISR: called when the communications core deposits a new frame buffer token
 static void mailbox_rx_isr(void* context) {
-    currentFrameIndex = IORD(DATA_MAILBOX_BASE, 0);
-    newFrameReady = 1;
+    current_frame_index = IORD(DATA_MAILBOX_BASE, 0);
+    new_frame_ready = 1;
 }
 
 // ---- Image Processing Functions ----

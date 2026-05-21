@@ -1,4 +1,4 @@
-// ESP32-CAM top-level module for the ECE3073 dual-core Nios II image system.
+// ESP32-CAM top-level module for the ECE3073 three-core Nios II image system.
 // Instantiates the Qsys NiosSystem, VGA subsystem, pixel buffer, and usec counter.
 // Created By: Nathan Morris       (32532601)
 //             Ritwam Shohaum      (33156816)
@@ -90,7 +90,7 @@ module esp32cam_top_level (
         .c0     (vga_clk_25MHz)
     );
 
-    // Qsys (Nios II) Dual-Core System Instantiation
+    // Qsys (Nios II) Three-Core System Instantiation
     NiosSystem u0 (
         // System Clocks and Resets
         .clk_clk                (CLOCK_50),

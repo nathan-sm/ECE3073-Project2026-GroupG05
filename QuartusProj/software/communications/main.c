@@ -1,4 +1,4 @@
-// Communications Nios II core � receives camera frames via SPI, shares accelerometer
+// Communications Nios II core -- receives camera frames via SPI, shares accelerometer
 // data, and forwards frame buffer tokens to the image processing core via mailbox.
 // Created By: Nathan Morris       (32532601)
 //             Ritwam Shohaum      (33156816)
@@ -22,10 +22,6 @@
 // Mailbox register offsets
 #define MAILBOX_STATUS_FULL 0x02  // bit in the STATUS register indicating mailbox is full
 #define MAILBOX_IRQ_ENABLE  0x01  // value written to the IRQ enable register
-
-// Camera command byte bit masks
-#define CAM_QUAD_MASK  0x02
-#define CAM_WRITE_MASK 0x10
 
 // Minimum tilt required on a single axis to count as a directional double-tap
 #define GYRO_THRESH_SINGLE 60
@@ -58,13 +54,13 @@ uint8_t g_camLastConfig = 0x0;
 static void mailbox_ack_isr(void* context) {
     uint32_t returnedBuf = IORD(ACK_MAILBOX_BASE, 0);
     if (returnedBuf < 3) {
-        freeBuffers[returnedBuf] = 1;
+        free_buffers[returnedBuf] = 1;
     }
 }
 
 // Called on a detected double-tap: cycles the quad display index for the tilt direction.
 void doubletap_handler() {
-    if (!sharedDisplay->isQuad) {
+    if (!shared_display->isQuad) {
         return;
     }
 
@@ -80,11 +76,11 @@ void doubletap_handler() {
     uint8_t imageY = rot.yAxis < 0 ? 0 : 1;
     uint8_t idx = (imageY << 1) | imageX;
 
-    sharedDisplay->quadDisplayIndices[idx] = (sharedDisplay->quadDisplayIndices[idx] + 1) % 4;
+    shared_display->quadDisplayIndices[idx] = (shared_display->quadDisplayIndices[idx] + 1) % 4;
 
     printf("Quad display: [%lu, %lu, %lu, %lu]\n",
-           sharedDisplay->quadDisplayIndices[0], sharedDisplay->quadDisplayIndices[1],
-           sharedDisplay->quadDisplayIndices[2], sharedDisplay->quadDisplayIndices[3]);
+           shared_display->quadDisplayIndices[0], shared_display->quadDisplayIndices[1],
+           shared_display->quadDisplayIndices[2], shared_display->quadDisplayIndices[3]);
 }
 
 // Main loop: acquires camera frames into a free triple buffer slot and forwards
@@ -130,13 +126,13 @@ int main() {
         // 1. Find a safe, unused buffer
         int write_target = -1;
         for (int i = 0; i < 3; i++) {
-            if (freeBuffers[i]) {
-                writeTarget = i;
+            if (free_buffers[i]) {
+                write_target = i;
                 break;
             }
         }
 
-        if (writeTarget == -1) {
+        if (write_target == -1) {
             continue;
         }
 
@@ -144,7 +140,7 @@ int main() {
         // Core 0 reads this to know what frame size to request
         shared_display->isQuad = (IORD(SW_BASE, 0) & 0x1) ? 1 : 0;
 
-        freeBuffers[writeTarget] = 0; // lock buffer while receiving frame
+        free_buffers[write_target] = 0; // lock buffer while receiving frame
 
         bool isQuad = shared_display->isQuad;
 
@@ -172,16 +168,16 @@ int main() {
         accel_update();
         DeviceRotation currentRot = accel_get_device_rotation();
 
-        shared_accel->x = current_rot.x_axis;
-        shared_accel->y = current_rot.y_axis;
-        shared_accel->z = current_rot.z_axis;
+        shared_accel->x = currentRot.xAxis;
+        shared_accel->y = currentRot.yAxis;
+        shared_accel->z = currentRot.zAxis;
 
 //        printf("Sent frame to image proc at addr %d\n", (int)dest_ptr);
 //		printf("Pixel value at 1 0: %d\n", dest_ptr[1]);
 
         // Send the completed buffer index to the image processing core
         while (IORD(DATA_MAILBOX_BASE, 2) & MAILBOX_STATUS_FULL);
-        IOWR(DATA_MAILBOX_BASE, 0, writeTarget);
+        IOWR(DATA_MAILBOX_BASE, 0, write_target);
     }
     return 0;
 }

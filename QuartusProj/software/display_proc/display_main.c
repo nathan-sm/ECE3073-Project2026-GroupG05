@@ -1,5 +1,5 @@
-// Communications Nios II core — receives camera frames via SPI, shares accelerometer
-// data, and forwards frame buffer tokens to the image processing core via mailbox.
+// Display Nios II core -- writes processed frames to the VGA pixel buffer,
+// drives FPS counter on 7-segment displays, and prints benchmarking data.
 // Created By: Nathan Morris       (32532601)
 //             Ritwam Shohaum      (33156816)
 //             Shuk Kan LUI        (33891885)
