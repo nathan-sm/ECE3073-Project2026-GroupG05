@@ -159,7 +159,7 @@ int main() {
 		uint8_t* dest_ptr = (uint8_t*)((uint32_t)buffers[write_target]);
 
 		uint32_t frameReadBeginTime = IORD(USEC_COUNTER_BASE, 0);
-		alt_avalon_spi_command(SPI_0_BASE, 0, 1, &cmd, readSize, dest_ptr, 0);
+		alt_avalon_spi_command(SPI_0_BASE, 0, 0, NULL, readSize, dest_ptr, 0);
 
         uint32_t frameReadEndTime = IORD(USEC_COUNTER_BASE, 0);
         sharedTimingData->frameReadTime = frameReadEndTime - frameReadBeginTime;
